@@ -5,6 +5,7 @@
 #include <charconv>
 #include <string_view>
 #include <ranges>
+#include <sstream>
 #include <queue>
 #include "./../utilities/graph_io.h"
 using namespace std;
@@ -21,7 +22,7 @@ int file_access(Graph& adj_list){
     }
     check_cache.close();
     cout<<"No cache file found"<<endl;
-    ifstream inputFile("/home/fakeheadset/Projects/EulerEasel/Data/graph.txt");
+    ifstream inputFile("/home/fakeheadset/Projects/EulerEasel/Data/graph-test.txt");
     
     if(!inputFile.is_open()){
         cerr<<"this file couldn't open"<<endl;
@@ -35,31 +36,27 @@ int file_access(Graph& adj_list){
 
     string line;
     vector<int> numbers;
+
     while(getline(inputFile, line)){
-        //split the string
-        auto words = views::split(line, '\t') | views::filter([](auto && subrange) {return !subrange.empty();}); 
+        // Ignore empty lines or comments
+        if(line.empty() || line[0] == '#') continue;
 
-        for( auto const word: words){
-            string_view token(word.begin(), word.end());
-
-            if(!token.empty() && token.back() == '\r'){
-                //removes the '/r' and the len-=1
-                token.remove_suffix(1);
+        // Use stringstream to naturally extract tab/space separated tokens
+        stringstream ss(line);
+        int u = 0, v = 0;
+        
+        // Extract both integers directly. Whitespace/tabs are handled natively.
+        if (ss >> u >> v) {
+            // Dynamically resize your adj_list vector if a node ID exceeds its capacity
+            int max_node = max(u, v);
+            if (max_node >= adj_list.size()) {
+                adj_list.resize(max_node + 1);
             }
 
-            if (token.empty()) continue;
-            int value=0;
-            //conversion to string to numbers
-            auto [ptr, ec] = from_chars(token.data(), token.data() + token.size(), value);
-
-            if(ec == errc()) numbers.push_back(value);
-        }   
-
-        if (numbers.size()>=2){
-            adj_list.push_back(numbers);
+            // Populate the undirected graph safely
+            adj_list[u].push_back(v);
+            adj_list[v].push_back(u);
         }
-        
-        numbers.clear();
     }   
 
     inputFile.close();

@@ -21,17 +21,18 @@ What questions bfs will be handling: shortest path between 2 users, calulate deg
 */
 
 //bfs core function
-void run_bfs(const vector<vector<int>>& adj_list, int start_node, int end_node){
+vector<int> run_bfs(const vector<vector<int>>& adj_list, int start_node, int end_node){
     vector<int> bfs;
 
     if (start_node < 0 || start_node >= adj_list.size()) {
         cout << "couldn't find start node" << endl;
-        return;
+        return bfs;
     }
 
     if (start_node == end_node) {
+        bfs.push_back(start_node);
         cout << "destination found" << endl;
-        return;
+        return bfs;
     }
 
     //the sequence in which the graph is travesed
@@ -51,7 +52,7 @@ void run_bfs(const vector<vector<int>>& adj_list, int start_node, int end_node){
             if(!vis[it]){
                 if (it==end_node){
                     cout<<"destination found"<<endl;
-                    return;
+                    return bfs;
                 }
                 vis[it]=1;
                 seq.push(it);
@@ -60,7 +61,7 @@ void run_bfs(const vector<vector<int>>& adj_list, int start_node, int end_node){
     }
     
     cout<<"process has ended but didn't found any"<<endl;
-    return ;
+    return bfs;
 }
 
 int main(int argc, char* argv[]){
@@ -85,7 +86,21 @@ int main(int argc, char* argv[]){
 
     auto start = chrono::steady_clock::now();
     cout<<"size of the adj_list is ="<< adj_list.size()<<endl;
-    run_bfs(adj_list, start_node, end_node);
+
+    // for(const auto& el: adj_list){
+    //     for(const auto& vec_el: el){
+    //         cout<<vec_el<<" ";
+    //     }
+    //     cout<<endl;
+    // }
+
+    vector<int> bfs = run_bfs(adj_list, start_node, end_node);
+    for(auto& el: bfs) {
+        cout<<el<<"->";
+    }
+    cout<<"end"<<endl;
+
+
     auto end = chrono::steady_clock::now();
     auto duration_bfs = chrono::duration_cast<chrono::milliseconds>(end-start);
     cout<<"time taken to run bfs = " <<duration_bfs.count()<<endl;
