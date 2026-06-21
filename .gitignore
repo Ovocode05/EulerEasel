@@ -1,3 +1,4 @@
 Data
 *.exe
 *.bin
+__pycache__
