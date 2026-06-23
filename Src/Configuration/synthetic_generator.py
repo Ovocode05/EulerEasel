@@ -1,5 +1,7 @@
 import numpy as np
-from Src.phase1.csr_slice import compute_gini_numpy
+from scipy.io import mmwrite 
+from scipy.sparse import coo_matrix 
+from scipy.stats import zipfian
 
 '''
 the ideas behind is the sanity check of the creating a normal equal graph and other creating a very skewed graph
@@ -10,19 +12,20 @@ Equal Distribution : [0., 0., 0., ........ 0.]
 Mostly Skewed Distribution : [1., ....... , 1.]
 '''
 
-#creating a sequence from zipf distribution 
-def zipf_dist(size, a=2.0):
-    rng = np.random.default_rng()
-    samples = rng.zipf(a, size)
-    samples = samples.flatten()
+def create_skew_mtx(filename, rows, cols, density, s=1.5):
+    rows = int(rows)
+    cols = int(cols)
+    num_el = int(rows*cols*density)
     
-    return samples  
+    rng = np.random.default_rng()
+    row_ind = rng.integers(0, rows, size=num_el)
+    col_ind = rng.integers(0, cols, size=num_el)
+    
+    data = zipfian.rvs(s, n=1000, size=num_el, random_state=rng)
+    
+    sparse_matrix = coo_matrix((data, (row_ind, col_ind)), shape=(rows, cols))
+    mmwrite(filename, sparse_matrix)
+    print(f"Successfully saved {filename} ({rows}x{cols}, nnz={sparse_matrix.nnz})")
+    
 
-#343fff skewed 
-# samples = zipf_dist((16,1), 2.5)
-# samples_gini = compute_gini_numpy(samples)
-
-#343fff equal 
-# samples_eq = zipf_dist((16,1), 1.2)
-# samples = compute_gini_numpy(samples_eq)
-
+create_skew_mtx("/home/fakeheadset/Projects/EulerEasel/Data/synthetic/equal_dist.mtx", rows=100, cols=100, density=0.01, s=1.01)

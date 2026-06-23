@@ -7,27 +7,8 @@
 #include<algorithm>
 #include "./utils/file_parser.h"
 #include "./utils/datatype.h"
+#include "./utils/matrix_dim.h"
 using namespace std;
-
-tuple<int, int, int> matrix_dim(){
-    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/bcsstk18.mtx");
-    string line="";
-    while(getline(file, line)){
-        if(line.empty() || line[0]=='%') continue;
-    }
-
-    int numrows =0;
-    int numcols=0;
-    int nnz=0;
-    while(getline(file,line)){
-        stringstream ss(line);
-        if(ss >> numrows >> numcols >> nnz) break;
-    }
-
-    file.close();
-
-    return {numrows, numcols, nnz};
-}
 
 tuple<vector<vector<double>>, vector<vector<int>>> ellpack_format(const vector<matrix_el>& matrix,  int total_rows, ell& ellpack){
     auto [numrows, numcols, nnz] = matrix_dim(); 
