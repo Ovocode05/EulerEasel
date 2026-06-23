@@ -13,7 +13,6 @@ void Csrformat(const vector<matrix_el>& matrix, int total_rows, CSR& csr, int no
     .mtx data to csr format that is 3 arrays [columns_indices, row_ptr, values]
     */
    int nnz = nonz;
-   cout<<"nnz"<<nnz<<endl;
    csr.num_rows = nnz;
    csr.ind.resize(nnz);
    csr.vals.resize(nnz);
