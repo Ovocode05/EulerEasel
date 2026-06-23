@@ -22,7 +22,7 @@ void Csrformat(const vector<matrix_el>& matrix, int total_rows, CSR& csr){
         csr.rptr[r+1]++; 
    }
 
-   for(int i=0;i<total_rows;i++){
+   for(int i=1;i<total_rows;i++){
         csr.rptr[i] +=csr.rptr[i-1];
    }
    

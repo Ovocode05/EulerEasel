@@ -2,18 +2,22 @@
 using namespace std;
 
 struct matrix_el{
-    int row_el;
-    int col_el;
+    unsigned int row_el;
+    unsigned int col_el;
     double val_el;
 };
 
 struct CSR {
-    vector<int> rptr;
-    vector<int> ind;
+    vector<unsigned int> rptr;
+    vector<unsigned int> ind;
     vector<double> vals;
-    int num_rows; 
+    unsigned int num_rows; 
 };
 
 struct ell{
-
+    unsigned int numcols;
+    unsigned int numrows;
+    unsigned int max_padd;
+    vector<unsigned int> col_ind;
+    vector<double> val;
 };
