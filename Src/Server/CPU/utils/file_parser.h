@@ -9,13 +9,14 @@ using namespace std;
 int file_parser(vector<matrix_el>& matrix){
 
     //get the file
-    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/synthetic/equal_dist.mtx");
+    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/synthetic/uniform.mtx");
     if(!file.is_open()){
         cerr<<"couldn't open the file"<<endl;
         return -1;
     }
 
     string line;
+    bool first_data_line = false;
 
     //get the rest line and parse the data
     while(getline(file, line)){
@@ -23,6 +24,11 @@ int file_parser(vector<matrix_el>& matrix){
             continue;
         }
 
+        if(!first_data_line){
+            first_data_line=true;
+            continue; 
+        } 
+        
         //load the string into the stream
         stringstream ss(line);
         int rows;
@@ -30,8 +36,8 @@ int file_parser(vector<matrix_el>& matrix){
         double vals;
         if(ss >> rows >> cols >> vals){
             matrix_el el;
-            el.row_el = rows - 1;
-            el.col_el = cols - 1;
+            el.row_el = rows-1;
+            el.col_el = cols-1;
             el.val_el = vals;
             matrix.push_back(el);
         }

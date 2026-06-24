@@ -54,12 +54,14 @@ vector<double> SpMv_kernel(CSR& csr, vector<double> x, vector<double> y){
 int main(){
     vector<matrix_el> matrix;
     CSR csr;
-
+    
     auto [r, c, nnz] = matrix_dim();
+
     file_parser(matrix);
+
     Csrformat(matrix, r, csr, nnz);
 
-    //create results
+    // //create results
     auto x = Central_Vector::generate();
     vector<double> y(r, 0);
     vector<double> y_new(r);

@@ -8,7 +8,7 @@
 using namespace std;
 
 tuple<int, int, int> matrix_dim(){
-    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/synthetic/equal_dist.mtx");
+    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/synthetic/uniform.mtx");
     if(!file.is_open()){
         cerr<<"file error"<<endl;
         return {0,0,0};

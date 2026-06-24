@@ -13,33 +13,31 @@
 #include "./utils/vector_gen.h"
 using namespace std;
 
-tuple<vector<vector<double>>, vector<vector<int>>> ellpack_format(const vector<matrix_el>& matrix,  int total_rows, ell& ellpack){
-    auto [numrows, numcols, nnz] = matrix_dim(); 
-    ellpack.numcols=numcols;
-    ellpack.numrows=numrows;
+tuple<vector<vector<double>>, vector<vector<int>>> ellpack_format(const vector<matrix_el>& matrix, int r, int c, int nnz, ell& ellpack){
+    ellpack.numcols=c;
+    ellpack.numrows=r;
 
-    vector<int> row_ptr(total_rows+1,0);
+    vector<int> row_count(r,0);
     for(int i=0;i<nnz;i++){
-        int r = matrix[i].row_el;
-        row_ptr[r+1]++;
+        int ridx = matrix[i].row_el;
+        row_count[ridx]++;
     }
     
-    sort(row_ptr.begin(), row_ptr.end());
-    ellpack.max_padd = row_ptr.back();
+    ellpack.max_padd = *max_element(row_count.begin(), row_count.end());
 
     vector<vector<double>> A(ellpack.numrows, vector<double>(ellpack.max_padd,0));
-    vector<vector<int>> J(ellpack.numrows, vector<int>(ellpack.max_padd,0));
+    vector<vector<int>> J(ellpack.numrows, vector<int>(ellpack.max_padd,-1));
 
-    vector<int> row_counter(numrows, 0);
+    vector<int> row_counter(r, 0);
     for(const auto& el: matrix){
-        int r = el.row_el;
-        int c =el.col_el;
+        int ridx = el.row_el;
+        int cidx = el.col_el;
         double val = el.val_el;
-        int slot = row_counter[r];
+        int slot = row_counter[ridx];
 
-        A[r][slot] =val;
-        J[r][slot] =c;
-        row_counter[r]++;
+        A[ridx][slot] =val;
+        J[ridx][slot] =cidx;
+        row_counter[ridx]++;
     }
     
     cout<<"A and J"<<endl;
@@ -54,11 +52,13 @@ vector<double> SpMv_kernel_ell(vector<double> y, vector<double> x, vector<vector
     int numrows = A.size();
     int numcols = A[0].size();
     for(int i=0;i<numrows;i++){
-        int sum=0;
+        double sum=0;
 
         for(int j=0;j<numcols;j++){
-            int val = A[i][j];
+            double val = A[i][j];
             int col = J[i][j];
+
+            if(col==-1) break;
             sum +=val*x[col];
         }
 
@@ -74,9 +74,10 @@ int main(){
 
     auto [r, c, nnz] = matrix_dim();
     file_parser(matrix);
-    auto [A , J]= ellpack_format(matrix, r, ELL);
 
-    //create results
+    auto [A , J]= ellpack_format(matrix, r,c, nnz, ELL);
+
+    // create results
     auto x = Central_Vector::generate();
     vector<double> y(r, 0);
     vector<double> y_new(r);
