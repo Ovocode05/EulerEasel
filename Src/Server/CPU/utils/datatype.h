@@ -1,5 +1,7 @@
 #pragma once
 #include <iostream>
+#include<vector>
+#include "./matrix_dim.h"
 using namespace std;
 
 struct matrix_el{
@@ -19,6 +21,6 @@ struct ell{
     unsigned int numcols;
     unsigned int numrows;
     unsigned int max_padd;
-    vector<unsigned int> col_ind;
-    vector<double> val;
+    vector<vector<unsigned int>> col_ind;
+    vector<vector<double>> val;
 };

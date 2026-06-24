@@ -5,9 +5,12 @@
 #include<fstream>
 #include<string>
 #include<algorithm>
+#include<random>
 #include "./utils/file_parser.h"
 #include "./utils/datatype.h"
 #include "./utils/matrix_dim.h"
+#include "./utils/create_file.h"
+#include "./utils/vector_gen.h"
 using namespace std;
 
 tuple<vector<vector<double>>, vector<vector<int>>> ellpack_format(const vector<matrix_el>& matrix,  int total_rows, ell& ellpack){
@@ -38,25 +41,12 @@ tuple<vector<vector<double>>, vector<vector<int>>> ellpack_format(const vector<m
         J[r][slot] =c;
         row_counter[r]++;
     }
-
-    //columns order 
-    vector<double> flat_A;
-    vector<int> flat_J;
-    for(size_t col=0;col<numcols;col++){
-        for(size_t row=0;row<numrows;row++){
-            flat_A.emplace_back(A[row][col]);
-            flat_J.emplace_back(J[row][col]);
-        }
-    }
     
+    cout<<"A and J"<<endl;
     return {A, J};
 }
 
-// void ellpack_row_format(const vector<matrix_el>& matrix,  int total_rows, ell& ellpack){
-//     return;
-// }
-
-vector<double> SpMv_kernel_ell(vector<double> y, vector<int> x, vector<vector<double>> A, vector<vector<double>> J){
+vector<double> SpMv_kernel_ell(vector<double> y, vector<double> x, vector<vector<double>> A, vector<vector<int>> J){
     /*
     SpMV kernel of Ellpack has shown more efficient results for GPU and parallel computations
     */
@@ -76,4 +66,22 @@ vector<double> SpMv_kernel_ell(vector<double> y, vector<int> x, vector<vector<do
     }
         
     return y;
+}
+
+int main(){
+    vector<matrix_el> matrix;
+    ell ELL;
+
+    auto [r, c, nnz] = matrix_dim();
+    file_parser(matrix);
+    auto [A , J]= ellpack_format(matrix, r, ELL);
+
+    //create results
+    auto x = Central_Vector::generate();
+    vector<double> y(r, 0);
+    vector<double> y_new(r);
+    y_new = SpMv_kernel_ell(y, x, A, J);
+
+    create_outfile("/home/fakeheadset/Projects/EulerEasel/Src/Server/CPU/results", "ELL_res.txt", y_new);
+
 }

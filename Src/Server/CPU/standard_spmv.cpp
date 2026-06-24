@@ -6,6 +6,7 @@
 #include "./utils/datatype.h"
 #include "./utils/matrix_dim.h"
 #include "./utils/create_file.h"
+#include "./utils/vector_gen.h"
 using namespace std;
 
 void Csrformat(const vector<matrix_el>& matrix, int total_rows, CSR& csr, int nonz){
@@ -58,17 +59,8 @@ int main(){
     file_parser(matrix);
     Csrformat(matrix, r, csr, nnz);
 
-
-    vector<double> x(c);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distr(1, 1000);
-
-    for (int i = 0; i < c; ++i) {
-        x[i] = distr(gen);
-    }
-
     //create results
+    auto x = Central_Vector::generate();
     vector<double> y(r, 0);
     vector<double> y_new(r);
     y_new = SpMv_kernel(csr, x, y);
