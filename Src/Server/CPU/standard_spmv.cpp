@@ -9,15 +9,14 @@
 #include "./utils/vector_gen.h"
 using namespace std;
 
-void Csrformat(const vector<matrix_el>& matrix, int total_rows, CSR& csr, int nonz){
+void Csrformat(const vector<matrix_el>& matrix, int r, int c, int nnz,CSR& csr){
     /*
     .mtx data to csr format that is 3 arrays [columns_indices, row_ptr, values]
     */
-   int nnz = nonz;
-   csr.num_rows = nnz;
+   csr.num_rows = r;
    csr.ind.resize(nnz);
    csr.vals.resize(nnz);
-   csr.rptr.assign(total_rows+1,0);
+   csr.rptr.assign(r+1,0);
 
    for(int i=0;i<nnz;i++){
         csr.vals[i] = matrix[i].val_el;
@@ -26,7 +25,7 @@ void Csrformat(const vector<matrix_el>& matrix, int total_rows, CSR& csr, int no
         csr.rptr[r+1]++; 
    }
 
-   for(int i=1;i<total_rows;i++){
+   for(int i=1;i<=r;i++){
         csr.rptr[i] +=csr.rptr[i-1];
    }
    
@@ -39,10 +38,10 @@ vector<double> SpMv_kernel(CSR& csr, vector<double> x, vector<double> y){
     */
     int total_rows = y.size();
     for(int i=0;i<total_rows;i++){
-        int sum=0;
-        for(int k=csr.rptr[i]; i<csr.rptr[i+1];i++){
+        double sum=0;
+        for(int k=csr.rptr[i]; k<csr.rptr[i+1];k++){
             int j=csr.ind[k];
-            sum += csr.vals[k]*x[j];
+            sum += csr.vals[k]* x[j];
         }
 
         y[i]=sum;
@@ -54,14 +53,11 @@ vector<double> SpMv_kernel(CSR& csr, vector<double> x, vector<double> y){
 int main(){
     vector<matrix_el> matrix;
     CSR csr;
-    
     auto [r, c, nnz] = matrix_dim();
 
     file_parser(matrix);
+    Csrformat(matrix, r, c, nnz, csr);
 
-    Csrformat(matrix, r, csr, nnz);
-
-    // //create results
     auto x = Central_Vector::generate();
     vector<double> y(r, 0);
     vector<double> y_new(r);

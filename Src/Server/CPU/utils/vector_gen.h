@@ -10,7 +10,7 @@ public:
     std::random_device rd;
 
     //identical seed number generates same values for instances
-    std::mt19937 gen(rd());
+    std::mt19937 gen(42);
     std::uniform_int_distribution<> distr(1, 1000);
 
     vector<double> x;
