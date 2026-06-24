@@ -2,11 +2,11 @@
 #include<cmath>
 #include<vector>
 #include<random>
-#include "./utils/file_parser.h"
-#include "./utils/datatype.h"
-#include "./utils/matrix_dim.h"
-#include "./utils/create_file.h"
-#include "./utils/vector_gen.h"
+// #include "./../../utils/file_parser.h"
+// #include "./../../utils/datatype.h"
+// #include "./../../utils/matrix_dim.h"
+// #include "./../../utils/create_file.h"
+// #include "./../../utils/vector_gen.h"
 using namespace std;
 
 void Csrformat(const vector<matrix_el>& matrix, int r, int c, int nnz,CSR& csr){
@@ -50,19 +50,19 @@ vector<double> SpMv_kernel(CSR& csr, vector<double> x, vector<double> y){
     return y;
 }
 
-int main(){
-    vector<matrix_el> matrix;
-    CSR csr;
-    auto [r, c, nnz] = matrix_dim();
+// int main(){
+//     vector<matrix_el> matrix;
+//     CSR csr;
+//     auto [r, c, nnz] = matrix_dim();
 
-    file_parser(matrix);
-    Csrformat(matrix, r, c, nnz, csr);
+//     file_parser(matrix);
+//     Csrformat(matrix, r, c, nnz, csr);
 
-    auto x = Central_Vector::generate();
-    vector<double> y(r, 0);
-    vector<double> y_new(r);
-    y_new = SpMv_kernel(csr, x, y);
+//     auto x = Central_Vector::generate();
+//     vector<double> y(r, 0);
+//     vector<double> y_new(r);
+//     y_new = SpMv_kernel(csr, x, y);
 
-    create_outfile("/home/fakeheadset/Projects/EulerEasel/Src/Server/CPU/results", "CSR_res.txt", y_new);
+//     create_outfile("/home/fakeheadset/Projects/EulerEasel/Src/Server/CPU/results", "CSR_res.txt", y_new);
 
-} 
+// } 

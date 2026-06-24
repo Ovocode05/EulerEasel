@@ -24,3 +24,10 @@ struct ell{
     vector<vector<unsigned int>> col_ind;
     vector<vector<double>> val;
 };
+
+struct hybd{
+    ell el_part;
+    CSR csr_part;
+    vector<matrix_el> ell_entries;
+    vector<matrix_el> csr_entries;
+};
