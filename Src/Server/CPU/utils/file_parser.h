@@ -9,7 +9,7 @@ using namespace std;
 int file_parser(vector<matrix_el>& matrix){
 
     //get the file
-    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/synthetic/uniform.mtx");
+    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/synthetic/skewed.mtx");
     if(!file.is_open()){
         cerr<<"couldn't open the file"<<endl;
         return -1;

@@ -36,4 +36,4 @@ def create_skew_mtx(rows, cols, density, s=1.5):
 
 
 if __name__=="__main__":
-    create_skew_mtx(10, 10, 0.1,1.5)
+    create_skew_mtx(1000, 1000, 0.15,2.5)

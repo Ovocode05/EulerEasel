@@ -6,11 +6,8 @@
 #include<string>
 #include<algorithm>
 #include<random>
-// #include "./../../utils/file_parser.h"
-// #include "./../../utils/datatype.h"
-// #include "./../../utils/matrix_dim.h"
-// #include "./../../utils/create_file.h"
-// #include "./../../utils/vector_gen.h"
+#include<immintrin.h>
+#include<omp.h>
 using namespace std;
 
 tuple<vector<vector<double>>, vector<vector<int>>> ellpack_format(const vector<matrix_el>& matrix, int r, int c, int nnz, ell& ellpack){
@@ -51,6 +48,7 @@ vector<double> SpMv_kernel_ell(vector<double> y, vector<double> x, vector<vector
     
     int numrows = A.size();
     int numcols = A[0].size();
+
     for(int i=0;i<numrows;i++){
         double sum=0;
 
@@ -67,22 +65,3 @@ vector<double> SpMv_kernel_ell(vector<double> y, vector<double> x, vector<vector
         
     return y;
 }
-
-// int main(){
-//     vector<matrix_el> matrix;
-//     ell ELL;
-
-//     auto [r, c, nnz] = matrix_dim();
-//     file_parser(matrix);
-
-//     auto [A , J]= ellpack_format(matrix, r,c, nnz, ELL);
-
-//     // create results
-//     auto x = Central_Vector::generate();
-//     vector<double> y(r, 0);
-//     vector<double> y_new(r);
-//     y_new = SpMv_kernel_ell(y, x, A, J);
-
-//     create_outfile("/home/fakeheadset/Projects/EulerEasel/Src/Server/CPU/results", "ELL_res.txt", y_new);
-
-// }
