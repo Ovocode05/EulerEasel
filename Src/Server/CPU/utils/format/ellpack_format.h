@@ -10,13 +10,13 @@
 #include<omp.h>
 using namespace std;
 
-tuple<vector<vector<double>>, vector<vector<int>>> ellpack_format(const vector<matrix_el>& matrix, int r, int c, int nnz, ell& ellpack){
+tuple<vector<vector<double>>, vector<vector<int32_t>>> ellpack_format(const vector<matrix_el>& matrix, int32_t r, int32_t c, int32_t nnz, ell& ellpack){
     ellpack.numcols=c;
     ellpack.numrows=r;
 
     vector<int> row_count(r,0);
-    for(int i=0;i<nnz;i++){
-        int ridx = matrix[i].row_el;
+    for(int32_t i=0;i<nnz;i++){
+        int32_t ridx = matrix[i].row_el;
         row_count[ridx]++;
     }
     
@@ -27,10 +27,10 @@ tuple<vector<vector<double>>, vector<vector<int>>> ellpack_format(const vector<m
 
     vector<int> row_counter(r, 0);
     for(const auto& el: matrix){
-        int ridx = el.row_el;
-        int cidx = el.col_el;
+        int32_t ridx = el.row_el;
+        int32_t cidx = el.col_el;
         double val = el.val_el;
-        int slot = row_counter[ridx];
+        int32_t slot = row_counter[ridx];
 
         A[ridx][slot] =val;
         J[ridx][slot] =cidx;
@@ -41,20 +41,20 @@ tuple<vector<vector<double>>, vector<vector<int>>> ellpack_format(const vector<m
     return {A, J};
 }
 
-vector<double> SpMv_kernel_ell(vector<double> y, vector<double> x, vector<vector<double>> A, vector<vector<int>> J){
+vector<double> SpMv_kernel_ell(vector<double> y, vector<double> x, vector<vector<double>> A, vector<vector<int32_t>> J){
     /*
     SpMV kernel of Ellpack has shown more efficient results for GPU and parallel computations
     */
     
-    int numrows = A.size();
-    int numcols = A[0].size();
+    int32_t numrows = A.size();
+    int32_t numcols = A[0].size();
 
-    for(int i=0;i<numrows;i++){
+    for(int32_t i=0;i<numrows;i++){
         double sum=0;
 
-        for(int j=0;j<numcols;j++){
+        for(int32_t j=0;j<numcols;j++){
             double val = A[i][j];
-            int col = J[i][j];
+            int32_t col = J[i][j];
 
             if(col==-1) break;
             sum +=val*x[col];

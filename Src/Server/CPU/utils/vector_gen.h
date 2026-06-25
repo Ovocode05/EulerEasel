@@ -15,7 +15,7 @@ public:
 
     vector<double> x;
     x.reserve(c);
-    for (size_t i = 0; i < c; ++i) {
+    for (int32_t i = 0; i < c; ++i) {
         x.emplace_back(distr(gen));
     }
     return x;

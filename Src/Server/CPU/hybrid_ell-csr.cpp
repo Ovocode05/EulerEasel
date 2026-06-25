@@ -11,19 +11,19 @@
 #include "./utils/file_parser.h"
 using namespace std;
 
-tuple<vector<vector<double>>, vector<vector<int>>>hybrid_format(hybd& hybrid, vector<matrix_el>& matrix, int r, int c, int nnz){
+tuple<vector<vector<double>>, vector<vector<int>>>hybrid_format(hybd& hybrid, vector<matrix_el>& matrix, int32_t r, int32_t c, int32_t nnz){
 
-    vector<int> row_counter(r, 0);
+    vector<int32_t> row_counter(r, 0);
     for(const auto& el : matrix){
         row_counter[el.row_el]++;
     }
     
-    vector<int> sorted = row_counter;
+    vector<int32_t> sorted = row_counter;
     sort(sorted.begin(), sorted.end());
-    int threshold = sorted[0];
-    int max_jump = 0;
-    for(size_t i=1;i<sorted.size();i++){
-        int jump = sorted[i] - sorted[i-1];
+    int32_t threshold = sorted[0];
+    int32_t max_jump = 0;
+    for(int32_t i=1;i<sorted.size();i++){
+        int32_t jump = sorted[i] - sorted[i-1];
         if(jump > max_jump){
             max_jump = jump;
             threshold = sorted[i-1];
@@ -31,7 +31,7 @@ tuple<vector<vector<double>>, vector<vector<int>>>hybrid_format(hybd& hybrid, ve
     }
 
     for(const auto& el: matrix){
-        int row = el.row_el;
+        int32_t row = el.row_el;
         if(row_counter[row]<=threshold){
             //apply csr
             hybrid.ell_entries.emplace_back(el);
@@ -42,8 +42,8 @@ tuple<vector<vector<double>>, vector<vector<int>>>hybrid_format(hybd& hybrid, ve
     }
 
     //measure r,c,nnz for each part of the matrix
-    int nnz_csr = hybrid.csr_entries.size();
-    int nnz_ell = hybrid.ell_entries.size();
+    int32_t nnz_csr = hybrid.csr_entries.size();
+    int32_t nnz_ell = hybrid.ell_entries.size();
 
     Csrformat(hybrid.csr_entries, r,c,nnz_csr, hybrid.csr_part);
     auto [A,J] = ellpack_format(hybrid.ell_entries, r, c,nnz_ell, hybrid.el_part);
@@ -51,12 +51,12 @@ tuple<vector<vector<double>>, vector<vector<int>>>hybrid_format(hybd& hybrid, ve
     return {A,J};
 }
 
-vector<double> SpMv_kernel_hybrid(hybd& hybrid, vector<double> y, const vector<double>& x, vector<vector<double>>& A, vector<vector<int>>& J, int r){
+vector<double> SpMv_kernel_hybrid(hybd& hybrid, vector<double> y, const vector<double>& x, vector<vector<double>>& A, vector<vector<int32_t>>& J, int32_t r){
     auto y_csr = SpMv_kernel(hybrid.csr_part, x, y);
     auto y_ell = SpMv_kernel_ell(y,x, A,J); 
     vector<double> y_new(r,0);
 
-    for(int i = 0; i < r; i++){
+    for(int32_t i = 0; i < r; i++){
         y_new[i] = y_csr[i] + y_ell[i];
     }
 

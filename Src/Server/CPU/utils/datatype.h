@@ -5,23 +5,23 @@
 using namespace std;
 
 struct matrix_el{
-    unsigned int row_el;
-    unsigned int col_el;
+    int32_t row_el;
+    int32_t col_el;
     double val_el;
 };
 
 struct CSR {
-    vector<unsigned int> rptr;
-    vector<unsigned int> ind;
+    vector<int32_t> rptr;
+    vector<int32_t> ind;
     vector<double> vals;
-    unsigned int num_rows; 
+    int32_t num_rows; 
 };
 
 struct ell{
-    unsigned int numcols;
-    unsigned int numrows;
-    unsigned int max_padd;
-    vector<vector<unsigned int>> col_ind;
+    int32_t numcols;
+    int32_t numrows;
+    int32_t max_padd;
+    vector<vector<int32_t>> col_ind;
     vector<vector<double>> val;
 };
 

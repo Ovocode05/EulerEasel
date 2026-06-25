@@ -7,7 +7,7 @@
 #include<string>
 using namespace std;
 
-tuple<int, int, int> matrix_dim(){
+tuple<int32_t, int32_t, int32_t> matrix_dim(){
     ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/synthetic/uniform.mtx");
     if(!file.is_open()){
         cerr<<"file error"<<endl;
@@ -15,9 +15,9 @@ tuple<int, int, int> matrix_dim(){
     }
 
     string line="";
-    int numrows =0;
-    int numcols=0;
-    int nnz=0;
+    int32_t numrows =0;
+    int32_t numcols=0;
+    int32_t nnz=0;
 
     while(getline(file, line)){
         if(line.empty() || line[0]=='%') continue;

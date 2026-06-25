@@ -31,8 +31,8 @@ int file_parser(vector<matrix_el>& matrix){
         
         //load the string into the stream
         stringstream ss(line);
-        int rows;
-        int cols;
+        int32_t rows;
+        int32_t cols;
         double vals;
         if(ss >> rows >> cols >> vals){
             matrix_el el;
