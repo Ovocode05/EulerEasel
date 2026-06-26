@@ -107,3 +107,93 @@ vector<double> ell_spMV_AVX(vector<double> y, vector<double> x, vector<vector<do
 
     return y;
 }
+
+vector<double>ell_pack_AVX_vertical(vector<double> y, vector<double> x, vector<vector<double>> A, vector<vector<int32_t>> J){
+    
+    int32_t numrows = A.size();
+    int32_t maxpadd = A[0].size();
+    vector<int> inds;
+    vector<double> vals; 
+    for(int32_t j=0;j<numrows;j++){
+        for(int32_t l=0;l<maxpadd;l++){
+            //rowmajor
+            vals.emplace_back(A[j][l]);
+            inds.emplace_back(J[j][l]);
+        }
+    }
+
+    int32_t i =0;
+    for(;i<=numrows-4;i+=4){
+
+        __m256d sum0 = _mm256_setzero_pd();
+        __m256d sum1  = _mm256_setzero_pd();
+        __m256d sum2  = _mm256_setzero_pd();
+        __m256d sum3 = _mm256_setzero_pd();
+
+        //rowmajor  
+        int32_t idx0 = i*maxpadd;
+        int32_t idx1 = (i+1)*maxpadd;  
+        int32_t idx2 = (i+2)*maxpadd;
+        int32_t idx3 = (i+3)*maxpadd; 
+        
+        int32_t k=0;
+        for(;k<maxpadd; k++){
+
+            //force cpu to break it into smaller instruction - wastage of CPU cyles.
+            // __m256d val = _mm256_set_pd(vals[idx3], vals[idx2] ,vals[idx1], vals[idx0]);
+            // __m128i ind = _mm_set_epi32(inds[idx3], inds[idx2], inds[idx1], inds[idx0]);
+
+            __m256d val0 = _mm256_loadu_pd(&vals[idx0+k]);
+            __m128i ind0 = _mm_loadu_si128((const __m128i*)&inds[idx0+k]);
+            __m256d vec_x0 = _mm256_i32gather_pd(x.data(), ind0, 8);
+            sum0 = _mm256_fmadd_pd(val0, vec_x0 ,sum0);
+
+            __m256d val1 = _mm256_loadu_pd(&vals[idx1+k]);
+            __m128i ind1 = _mm_loadu_si128((const __m128i*)&inds[idx1+k]);
+            __m256d vec_x1 = _mm256_i32gather_pd(x.data(), ind1, 8);
+            sum1 = _mm256_fmadd_pd(val1, vec_x1 ,sum1);
+
+            __m256d val2 = _mm256_loadu_pd(&vals[idx2+k]);
+            __m128i ind2 = _mm_loadu_si128((const __m128i*)&inds[idx2+k]);
+            __m256d vec_x2 = _mm256_i32gather_pd(x.data(), ind2, 8);
+            sum2 = _mm256_fmadd_pd(val2, vec_x2 ,sum2);
+
+            __m256d val3 = _mm256_loadu_pd(&vals[idx3+k]);
+            __m128i ind3 = _mm_loadu_si128((const __m128i*)&inds[idx3+k]);
+            __m256d vec_x3 = _mm256_i32gather_pd(x.data(), ind3, 8);
+            sum3 = _mm256_fmadd_pd(val3, vec_x3 ,sum3);  
+        }
+
+        alignas(32) double temp0[4], temp1[4], temp2[4], temp3[4];
+        _mm256_store_pd(temp0, sum0);
+        _mm256_store_pd(temp1, sum1);
+        _mm256_store_pd(temp2, sum2);
+        _mm256_store_pd(temp3, sum3);
+
+        y[i] = temp0[0] + temp0[1] + temp0[2] + temp0[3];
+        y[i+1] = temp1[0] + temp1[1] + temp1[2] + temp1[3];
+        y[i+2] = temp2[0] + temp2[1] + temp2[2] + temp2[3];
+        y[i+3] = temp3[0] + temp3[1] + temp3[2] + temp3[3];
+
+        for (; k < maxpadd; k++) {
+            y[i]     += vals[idx0 + k] * x[inds[idx0 + k]];
+            y[i + 1] += vals[idx1  + k] * x[inds[idx1 + k]];
+            y[i + 2] += vals[idx2 + k] * x[inds[idx2 + k]];
+            y[i + 3] += vals[idx3 + k] * x[inds[idx3 + k]];
+        }
+    }
+    
+    for (; i < numrows; i++) {
+        double sum = 0.0;
+        int32_t base = i * maxpadd;
+        for (int32_t k = 0; k < maxpadd; k++) {
+            int32_t idx = base + k;
+            int32_t col = inds[idx];
+            sum += vals[idx] * x[col]; // Fixed accumulation logic
+        }
+
+        y[i] = sum;
+    }
+    
+    return y;
+}

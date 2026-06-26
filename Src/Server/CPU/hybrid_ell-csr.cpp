@@ -53,7 +53,7 @@ tuple<vector<vector<double>>, vector<vector<int>>>hybrid_format(hybd& hybrid, ve
 
 vector<double> SpMv_kernel_hybrid(hybd& hybrid, vector<double> y, const vector<double>& x, vector<vector<double>>& A, vector<vector<int32_t>>& J, int32_t r){
     auto y_csr = SpMV_kernel_AVX(hybrid.csr_part, x, y);
-    auto y_ell = ell_spMV_AVX(y,x, A,J); 
+    auto y_ell = ell_pack_AVX_vertical(y,x, A,J); 
     vector<double> y_new(r,0);
 
     for(int32_t i = 0; i < r; i++){
@@ -75,7 +75,7 @@ int main(){
     vector<double> y_new(r);
 
     // y_new = SpMv_kernel_hybrid(hybrid, y, x, A, J ,r);
-    // y_new = ell_spMV_AVX(y,x, A,J);
+    // y_new = ell_pack_AVX_vertical(y,x, A,J);
     y_new = SpMV_kernel_AVX(hybrid.csr_part, x, y);
     // create_outfile("/home/fakeheadset/Projects/EulerEasel/Src/Server/CPU/results", "Hybrid_res.txt", y_new);
     
