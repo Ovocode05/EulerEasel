@@ -65,3 +65,45 @@ vector<double> SpMv_kernel_ell(vector<double> y, vector<double> x, vector<vector
         
     return y;
 }
+
+vector<double> ell_spMV_AVX(vector<double> y, vector<double> x, vector<vector<double>> A, vector<vector<int32_t>> J){
+    /*
+    The AVX intrinsic implemented for the SpMV kernel for csr format 
+    int32_t bits variable storage
+    size 256 bits double precision floating point YMM registers
+    */
+
+    int32_t numrows = A.size();
+    int32_t numcols = A[0].size();
+
+    __m128i vec_minus_one= _mm_set1_epi32(-1);
+    for(int32_t i=0;i<numrows;i++){
+        
+        __m256d vec_sum = _mm256_setzero_pd();
+
+        int32_t k=0;
+        for(;k<=numcols-4;k+=4){
+
+            __m256d vals = _mm256_loadu_pd(&A[i][k]);
+            __m128i inds = _mm_loadu_si128((const __m128i*)&J[i][k]);
+            
+            __m256d x_vec = _mm256_i32gather_pd(x.data(), inds, 8); //8 is byte scaling, is to skip 8bytes to find next el 
+            
+            __m128i mask = _mm_cmpeq_epi32(inds, vec_minus_one);
+            int bitmask = _mm_movemask_ps(_mm_castsi128_ps(mask));
+            if(bitmask!=0) break;
+
+            vec_sum = _mm256_fmadd_pd(vals, x_vec,vec_sum);
+        }
+
+        double four_sum_array[4];
+        _mm256_storeu_pd(four_sum_array,vec_sum);
+        double final_sum_array = four_sum_array[0] + four_sum_array[1] + four_sum_array[2] + four_sum_array[3];
+
+        for(;k<=numcols;k++) final_sum_array += A[i][k]*x[J[i][k]];
+
+        y[i] = final_sum_array;
+    }
+
+    return y;
+}

@@ -8,7 +8,7 @@
 using namespace std;
 
 tuple<int32_t, int32_t, int32_t> matrix_dim(){
-    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/synthetic/uniform.mtx");
+    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/bcsstk18.mtx");
     if(!file.is_open()){
         cerr<<"file error"<<endl;
         return {0,0,0};

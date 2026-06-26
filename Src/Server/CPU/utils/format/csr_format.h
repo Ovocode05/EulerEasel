@@ -33,7 +33,7 @@ vector<double> SpMv_kernel(CSR& csr, vector<double> x, vector<double> y){
     /*
     SpMv_kernel forms the basic sparse vector multiplication function that 
     */
-    int32_t total_rows = y.size();
+    int32_t total_rows = csr.num_rows;
     
     for(int32_t i=0;i<total_rows;i++){
         double sum=0;
@@ -48,24 +48,45 @@ vector<double> SpMv_kernel(CSR& csr, vector<double> x, vector<double> y){
     return y;
 }
 
-
 vector<double> SpMV_kernel_AVX(CSR& csr, vector<double> x, vector<double> y){
     /*
     The AVX intrinsic implemented for the SpMV kernel for csr format 
     int32_t bits variable storage
-    size 256 bits AVX registers
+    size 256 bits double precision floating point YMM registers
+
+    steps: initializing 4*64bits precision floats with 0.0
+    creating size width 32bits signed integer variables for iterating over row ptr
+    loading 4 contiguous double vals into __m256d and similarly for __m128i
+    gather x.data scattered in memory - 4 blocks from RAM  
+    fuse addition
     */
 
     int32_t num_rows = csr.num_rows; 
-    int32_t i=0;
-    for(; i<num_rows-4;i+=4){
-        //initialize the accumulator
-        
 
+    for(int32_t i=0; i<num_rows;i++){
+
+        __m256d vec_sum = _mm256_setzero_pd();
+        int32_t k = csr.rptr[i];
+        int32_t rowend = csr.rptr[i+1];
+        
+        for(; k<rowend-4;k+=4){
+
+            __m256d vals = _mm256_loadu_pd(&csr.vals[k]);
+            __m128i ind = _mm_loadu_si128((const __m128i*)&csr.ind[k]);
+
+            __m256d vec_x = _mm256_i32gather_pd(x.data(), ind, 8);
+
+            vec_sum = _mm256_fmadd_pd(vals, vec_x, vec_sum);
+        }
+
+        double row_sum_array[4];
+        _mm256_store_pd(row_sum_array, vec_sum);
+        double final_sum_array = row_sum_array[0] + row_sum_array[1] + row_sum_array[2] + row_sum_array[3];
+        
+        for(; k<rowend;k++) final_sum_array += csr.vals[k]*x[csr.ind[k]];
+
+        y[i] = final_sum_array;
     }
 
-    //creating the register that accepts the data
-    //loading the data into the register
-    //fuse addtion : y += x*A
-    return y;
+   return y;
 }
