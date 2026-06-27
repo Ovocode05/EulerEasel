@@ -2,3 +2,13 @@ Data
 *.exe
 *.bin
 __pycache__
+.vscode
+# Ignore the temporary build artifacts folder
+build/
+
+# Ignore local IDE configurations
+.vscode/
+
+# Ignore the compiled Python native module binaries (.so on Linux, .pyd on Windows)
+*.so
+*.pyd

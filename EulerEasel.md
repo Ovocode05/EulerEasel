@@ -125,11 +125,13 @@ Steps:
    Measure speedup as you scale thread count, and notice where it stops scaling
    — for SpMV, that ceiling is usually memory bandwidth, not core count, which is
    itself a useful thing to observe directly.
-7. **Cache measurement:** use `perf stat` (or `valgrind --tool=cachegrind` if
+<br>
+*future extension:* 
+1. **Cache measurement:** use `perf stat` (or `valgrind --tool=cachegrind` if
    `perf` access is restricted) to measure L1/L2 cache miss rates for CSR vs.
    ELLPACK vs. hybrid. Good practice for trusting hardware counters before doing
    the same with Nsight Compute in Phase 3.
-8. **Graph reordering:** implement Reverse Cuthill-McKee to reduce matrix
+2. **Graph reordering:** implement Reverse Cuthill-McKee to reduce matrix
    bandwidth, and re-run your cache measurements before and after.
 
 **Done when:** for a handful of matrices across the skew spectrum, you have a
