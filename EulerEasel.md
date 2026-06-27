@@ -288,64 +288,8 @@ memory and flush once at the end, not chunk-by-chunk.
 
 ---
 
-## Phase 6 — PETSc as the Specialist Fallback
-*Roughly 2–3 weeks*
 
-**Goal:** recognize when a problem isn't "compute one SpMV fast" but "solve a
-linear system," especially when the matrix is non-symmetric or ill-conditioned —
-and hand that off to PETSc's mature, tested solvers via `petsc4py`, instead of
-reimplementing a solver yourself or forcing your SpMV router to do a job it was
-never built for.
-
-**Why this phase exists:** symmetry isn't a minor detail — it determines which
-solver is even valid. Many real PDE discretizations (advection-dominated
-problems, non-self-adjoint operators) produce a matrix where A ≠ Aᵗ, which rules
-out the cheapest solver (Conjugate Gradient needs symmetric positive-definite)
-and forces something more general like GMRES or BiCGSTAB. These are genuinely
-hard to implement correctly — decades of numerical-stability work went into
-them, which is exactly the kind of thing this whole roadmap has told you not to
-reimplement. PETSc has already done it, for thirty years. The point of this
-phase isn't to wrap PETSc blindly — it's to actually understand what a Krylov
-solver is doing and why your matrix's structure dictates which one is valid, so
-the calls you write are something you understand, not something you copied.
-
-Steps:
-1. Learn the distinction first, before any code: why CG requires symmetric
-   positive-definite, what goes wrong if you use it anyway (it can converge to
-   the wrong answer, or fail to converge, without an obvious warning sign), and
-   what GMRES and BiCGSTAB do differently. You don't need to implement either —
-   you should be able to explain in a sentence why each exists.
-2. Add a detection step to your Phase 1 loader: given a matrix, check whether
-   it's symmetric (compare against its transpose), and report this alongside
-   your existing Gini coefficient. This is the new signal that decides whether
-   this phase even gets used for a given matrix.
-3. Install `petsc4py` (with `mpi4py`) inside your WSL2/Linux environment, and
-   work through PETSc's own simplest linear-solve tutorial line by line, until
-   you can explain what every call — `KSP`, `PC`, `Mat`, `Vec` — is doing, not
-   just that it runs.
-4. Wire the real decision in: a well-behaved matrix (symmetric, not too
-   ill-conditioned) keeps going through your own router. A matrix flagged as
-   genuinely hard gets its whole solve handed to PETSc's GMRES or BiCGSTAB via
-   `petsc4py`, instead of being forced through your chunk-wise SpMV logic.
-5. *Stretch goal, not a requirement:* see whether your validated CPU-hybrid
-   kernel can serve as the matrix-vector product PETSc calls internally during
-   its solve, instead of throwing away everything you built whenever PETSc takes
-   over. Getting the hand-off itself correct is the actual goal of this phase —
-   treat this step as a bonus only once that's solid.
-
-**Done when:** your tool can take in a matrix it's never seen, correctly
-recognize whether it's well-behaved or hard, and either run it through your own
-router or hand it to PETSc — and you can explain out loud why that was the right
-call for that specific matrix.
-
-**Pitfall:** don't let this become "wrap whatever petsc4py example I found and
-hope it works." If you can't explain why GMRES was the right choice instead of
-CG, you've recreated the exact AI-generated-code problem you're trying to get
-away from.
-
----
-
-## Phase 7 — Packaging
+## Phase 6 — Packaging
 *Roughly 1–1.5 weeks*
 
 **Goal:** turn the working pipeline into something a stranger — or a future,
@@ -382,5 +326,4 @@ interviews — nothing about that earlier framing goes away. But the actual poin
 of building it, from here, is the one you stated: a small, honest, narrated
 engine that lets someone like you — or a PhD student who's never touched CUDA —
 get a real, working feel for heterogeneous sparse computation quickly, without
-either lying to them about what's happening or burying them in PETSc's internals
-on day one. That's worth building whether or not anyone else ever sees it.
+either lying to them about what's happening. That's worth building whether or not anyone else ever sees it.

@@ -51,9 +51,9 @@ tuple<vector<vector<double>>, vector<vector<int>>>hybrid_format(hybd& hybrid, ve
     return {A,J};
 }
 
-vector<double> SpMv_kernel_hybrid(hybd& hybrid, vector<double> y, const vector<double>& x, vector<vector<double>>& A, vector<vector<int32_t>>& J, int32_t r){
-    auto y_csr = SpMV_kernel_AVX(hybrid.csr_part, x, y);
-    auto y_ell = ell_pack_AVX_vertical(y,x, A,J); 
+vector<double> SpMv_kernel_hybrid(hybd& hybrid, const vector<double>& x, vector<vector<double>>& A, vector<vector<int32_t>>& J, int32_t r){
+    auto y_csr = SpMV_kernel_AVX(hybrid.csr_part, x);
+    auto y_ell = ell_pack_AVX_vertical(x, A,J); 
     vector<double> y_new(r,0);
 
     for(int32_t i = 0; i < r; i++){
@@ -71,12 +71,10 @@ int main(){
     auto [A, J] = hybrid_format(hybrid,matrix, r,c,nnz);
 
     auto x = Central_Vector::generate();
-    vector<double> y(r,0);
-    vector<double> y_new(r);
 
     // y_new = SpMv_kernel_hybrid(hybrid, y, x, A, J ,r);
     // y_new = ell_pack_AVX_vertical(y,x, A,J);
-    y_new = SpMV_kernel_AVX(hybrid.csr_part, x, y);
+    vector<double> y_new = SpMV_kernel_AVX(hybrid.csr_part, x);
     // create_outfile("/home/fakeheadset/Projects/EulerEasel/Src/Server/CPU/results", "Hybrid_res.txt", y_new);
     
     return 0;

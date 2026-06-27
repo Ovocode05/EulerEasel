@@ -6,7 +6,7 @@
 #include<omp.h>
 using namespace std;
 
-void Csrformat(const vector<matrix_el>& matrix, int32_t r, int32_t c, int32_t nnz,CSR& csr){
+void Csrformat(const vector<matrix_el>& matrix, int32_t r, int32_t c, int32_t nnz, CSR& csr){
     /*
     .mtx data to csr format that is 3 arrays [columns_indices, row_ptr, values]
     */
@@ -29,11 +29,12 @@ void Csrformat(const vector<matrix_el>& matrix, int32_t r, int32_t c, int32_t nn
    cout<<"CSR built!"<<endl;
 }
 
-vector<double> SpMv_kernel(CSR& csr, vector<double> x, vector<double> y){
+vector<double> SpMv_kernel(CSR& csr, const vector<double>& x){
     /*
     SpMv_kernel forms the basic sparse vector multiplication function that 
     */
     int32_t total_rows = csr.num_rows;
+    vector<double> y(total_rows,0);
     
     for(int32_t i=0;i<total_rows;i++){
         double sum=0;
@@ -48,7 +49,7 @@ vector<double> SpMv_kernel(CSR& csr, vector<double> x, vector<double> y){
     return y;
 }
 
-vector<double> SpMV_kernel_AVX(CSR& csr, vector<double> x, vector<double> y){
+vector<double> SpMV_kernel_AVX(CSR& csr, const vector<double>& x){
     /*
     The AVX intrinsic implemented for the SpMV kernel for csr format 
     int32_t bits variable storage
@@ -62,14 +63,16 @@ vector<double> SpMV_kernel_AVX(CSR& csr, vector<double> x, vector<double> y){
     */
 
     int32_t num_rows = csr.num_rows; 
+    vector<double> y(num_rows, 0);
 
+    #pragma omp parallel for default(none) shared(num_rows, csr, x, y) schedule(runtime) 
     for(int32_t i=0; i<num_rows;i++){
 
         __m256d vec_sum = _mm256_setzero_pd();
         int32_t k = csr.rptr[i];
         int32_t rowend = csr.rptr[i+1];
         
-        for(; k<rowend-4;k+=4){
+        for(; k<=rowend-4;k+=4){
 
             __m256d vals = _mm256_loadu_pd(&csr.vals[k]);
             __m128i ind = _mm_loadu_si128((const __m128i*)&csr.ind[k]);
@@ -80,7 +83,7 @@ vector<double> SpMV_kernel_AVX(CSR& csr, vector<double> x, vector<double> y){
         }
 
         double row_sum_array[4];
-        _mm256_store_pd(row_sum_array, vec_sum);
+        _mm256_storeu_pd(row_sum_array, vec_sum);
         double final_sum_array = row_sum_array[0] + row_sum_array[1] + row_sum_array[2] + row_sum_array[3];
         
         for(; k<rowend;k++) final_sum_array += csr.vals[k]*x[csr.ind[k]];
