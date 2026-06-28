@@ -7,10 +7,10 @@
 #include "./../utils/datatype.h"
 using namespace std;
 
-int file_parser(vector<matrix_el>& matrix){
+int file_parser(string filename, vector<matrix_el>& matrix){
 
     //get the file
-    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/bcsstk18.mtx");
+    ifstream file(filename);
     if(!file.is_open()){
         cerr<<"couldn't open the file"<<endl;
         return -1;

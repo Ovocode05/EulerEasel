@@ -7,8 +7,8 @@
 #include<string>
 using namespace std;
 
-tuple<int32_t, int32_t, int32_t> matrix_dim(){
-    ifstream file("/home/fakeheadset/Projects/EulerEasel/Data/bcsstk18.mtx");
+tuple<int32_t, int32_t, int32_t> matrix_dim(string filename){
+    ifstream file(filename);
     if(!file.is_open()){
         cerr<<"file error"<<endl;
         return {0,0,0};

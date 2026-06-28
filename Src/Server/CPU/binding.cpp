@@ -1,20 +1,26 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 #include <tuple>
+#include<vector>
+using namespace std;
 
 #include "./hybrid_ell-csr.cpp"
+PYBIND11_MAKE_OPAQUE(vector<matrix_el>); 
 namespace py = pybind11;
 
 PYBIND11_MODULE(eulereasel, m){
     m.doc()= "Python bindings for EulerEasel High-Performance CPU Kernels";
 
     py::module_ m_data = m.def_submodule("datatype", "Matrix storage structures");
-    py::class_<matrix_el>(m_data, "MatrixEl")
-        .def(py::init<>())
-        .def_readwrite("row_el", &matrix_el::row_el)
-        .def_readwrite("col_el", &matrix_el::col_el)
-        .def_readwrite("val_el", &matrix_el::val_el);
+    py::bind_vector<vector<matrix_el>>(m_data, "mat_vec");
 
+    py::class_<matrix_el>(m_data, "MatrixEl")
+    .def(py::init<>())
+    .def_readwrite("row_el", &matrix_el::row_el)
+    .def_readwrite("col_el", &matrix_el::col_el)
+    .def_readwrite("val_el", &matrix_el::val_el);
+    
     py::class_<CSR>(m_data, "CSR")
         .def(py::init<>())
         .def_readwrite("rptr", &CSR::rptr)
@@ -39,6 +45,9 @@ PYBIND11_MODULE(eulereasel, m){
 
 
     py::module_ m_funcs = m.def_submodule("functions", "High-performance processing operations");
+    m_funcs.def("file_parser", &file_parser, "read the raw file and convert to vector of matrix element",
+          py::arg("filename"), py::arg("matrix"));
+
     m_funcs.def("Csrformat", &Csrformat, "Convert .mtx matrix array into CSR format",
           py::arg("matrix"), py::arg("r"), py::arg("c"), py::arg("nnz"), py::arg("csr"));
 
@@ -65,6 +74,16 @@ PYBIND11_MODULE(eulereasel, m){
 
     m_funcs.def("SpMv_kernel_hybrid", &SpMv_kernel_hybrid, "Hybrid SpMV multiplication execution",
           py::arg("hybrid"), py::arg("x"), py::arg("A"), py::arg("J"), py::arg("r"));
+
+    m_funcs.def("Matrix_dim", &matrix_dim, "Find the matrix dimensions", py::arg("filename"));
+
+    py::class_<Central_Vector>(m_funcs, "CentralVector")
+        .def(py::init<>()) // Exposes default constructor
+        // Force .def_static to cleanly handle C++ static class routines
+        .def_static("generate", &Central_Vector::generate, 
+                    "Generate a reproducible dense input vector matching matrix constraints",
+                    py::arg("r"), py::arg("c"), py::arg("nnz"));
+
 }
 
 
