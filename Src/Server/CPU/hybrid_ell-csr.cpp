@@ -62,21 +62,3 @@ vector<double> SpMv_kernel_hybrid(hybd& hybrid, const vector<double>& x, vector<
 
     return y_new;
 }
-
-// int main(){
-//     hybd hybrid;
-//     vector<matrix_el> matrix;
-//     string filename = "";
-//     file_parser(filename, matrix);
-//     auto [r, c, nnz] = matrix_dim();
-//     auto [A, J] = hybrid_format(hybrid,matrix, r,c,nnz);
-
-//     auto x = Central_Vector::generate();
-
-//     // y_new = SpMv_kernel_hybrid(hybrid, y, x, A, J ,r);
-//     // y_new = ell_pack_AVX_vertical(y,x, A,J);
-//     vector<double> y_new = SpMV_kernel_AVX(hybrid.csr_part, x);
-//     // create_outfile("/home/fakeheadset/Projects/EulerEasel/Src/Server/CPU/results", "Hybrid_res.txt", y_new);
-    
-//     return 0;
-// }
