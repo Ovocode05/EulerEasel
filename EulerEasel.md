@@ -1,24 +1,91 @@
-# GraphSwitch — Complete Roadmap: CLI to Adaptive Engine
+# EulerEasel — Complete Roadmap: CLI to Adaptive Sparse Execution Engine
 
-This is the consolidated, start-to-finish version of the plan. It folds in the CPU
-deep-dive, the three-way router, structured logging, and PETSc as a fallback for
-genuinely hard matrices. It replaces the earlier roadmap file — this is the only
-document you need going forward.
+This is the single document covering everything — from environment setup through
+the final versioned product. It replaces all earlier roadmap files.
 
-**Who this is actually for:** not HPC veterans, not an interview panel — people
-like you, a year or two into learning this, who have a sparse matrix and no real
-idea yet what GPU or parallel programming involves. Every phase below should
-leave the tool a little more transparent and a little less intimidating to that
-person, including future-you. If a phase starts to feel like a wall, the "done
-when" line is your real minimum bar — hit that, move on, even if it isn't
-perfect. A tool that explains itself is the whole point here, more than a tool
-that's merely fast.
+---
 
-**What you're building, in one breath:** matrix file → CSR → split into chunks →
-check structure (skew and symmetry) → route each chunk to CPU-hybrid, Triton, or
-cuSPARSE — or, if the whole matrix is structurally hard, hand the solve to PETSc
-→ narrate every decision live in the terminal and save it to a log file → stitch
-results back together → report what happened and how much faster it was.
+## What You Are Building
+
+EulerEasel is a runtime sparse execution switchboard. It takes a CSR matrix,
+extracts cheap structural features from it, decides which memory layout and which
+execution backend will handle each chunk most efficiently, runs the computation,
+and explains every decision it made. It exposes a clean Python API so it can slot
+directly into a SciPy or CuPy workflow as a custom matvec — meaning existing
+iterative solvers (CG, GMRES, BiCGSTAB) can call your engine instead of their
+own default sparse multiply, without any other changes.
+
+In one breath: matrix file → CSR → features extracted → layout chosen →
+chunks routed to CPU-hybrid, Triton, or cuSPARSE → decisions narrated in
+terminal and saved to log → result assembled → speedup reported → pluggable as
+a LinearOperator into any solver that accepts one.
+
+**Who this is for:** people like you — a year or two into CS, no prior GPU or
+parallel programming background, who have a sparse matrix and want it to run
+fast without becoming an HPC engineer first. Every phase should leave the tool
+a little more transparent and a little less intimidating. The "done when" line
+at the end of each phase is your real minimum bar — hit it and move on.
+
+---
+
+## Full Tech Stack
+
+- **Python 3.10+** — orchestration, CLI, feature extraction, SciPy/CuPy binding
+- **C++ (C++17)** — hand-written CSR, ELLPACK-R, hybrid CSR-ELL kernels
+- **AVX2 / AVX-512 intrinsics** — SIMD vectorization inside the ELLPACK half
+- **OpenMP** — multi-core parallelism across row blocks
+- **pybind11** — binding C++ kernels into Python as the CPU backend
+- **Triton DSL** — compiler-generated GPU SpMV/SpMM kernel
+- **CUDA / cuSPARSE** — vendor-tuned GPU baseline via `torch.sparse.mm`
+- **PyTorch** — tensor management, GPU memory, cuSPARSE access
+- **CuPy** — GPU-resident LinearOperator for solver integration
+- **NVIDIA Nsight Compute (ncu)** — hardware counter profiling
+- **SciPy** — CSR loading, ground-truth SpMV, LinearOperator interface
+- **NetworkX** — synthetic Zipf graph generation
+- **SuiteSparse Matrix Collection** — real-world test matrices
+- **GitHub Actions** — CI for correctness tests across backends
+
+---
+
+## Research Positioning
+
+### The problem this solves
+
+No single sparse format is best across matrices or hardware. CSR is the universal
+default but leaves large performance on the table for structured or skewed
+matrices. Format-switching systems exist (SMAT, SMATER, Morpheus-Oracle,
+Auto-SpMV, DyLaClass) but each solves only a slice of the problem: some switch
+formats, some switch kernels, some model overhead, almost none do all three
+together at chunk-local granularity, and none combine this with an explainable
+routing log that tells a non-expert what happened and why.
+
+### Your research gaps and edge
+
+| Claim | What already exists | Your edge |
+|---|---|---|
+| Whole-matrix format switching | SMAT, SMATER, Morpheus-Oracle | You do it with explainability, low overhead, and chunk-local granularity |
+| Overhead-aware selection | Zhou et al. 2020 (one paper) | You make overhead a first-class runtime metric, not an afterthought |
+| Stable "most suitable" labels | DyLaClass (active gap as of 2024) | You predict the most robust backend, not the noisiest "fastest" label |
+| Local irregularity handling | Implied by block-partitioning work | You explicitly route different chunks of the same matrix differently |
+| Triton on graph-skewed SpMV | Completely absent from literature | Your Phase 3 is the only direct measurement of this |
+| SciPy/CuPy LinearOperator hook | Not in any format-switching library | You plug directly into existing solver pipelines with no user changes |
+
+### What you are not competing with
+
+You are not replacing PETSc, Ginkgo, or any solver stack. They solve Ax = b.
+You make the SpMV that any such solver calls thousands of times per solve run as
+fast as structurally possible, and you explain each decision in plain language.
+These are complementary positions, not competing ones.
+
+### Novelty statement (one sentence for interviews or a paper abstract)
+
+EulerEasel is a chunk-local, overhead-aware sparse execution switchboard that
+jointly selects memory layout and execution backend per matrix block, exposes
+every routing decision with a human-readable reason, and plugs into standard
+Python solver interfaces — a combination no existing format-switching or
+auto-tuning library currently provides.
+
+---
 
 ---
 
@@ -125,13 +192,14 @@ Steps:
    Measure speedup as you scale thread count, and notice where it stops scaling
    — for SpMV, that ceiling is usually memory bandwidth, not core count, which is
    itself a useful thing to observe directly.
-<br>
-*future extension:* 
-1. **Cache measurement:** use `perf stat` (or `valgrind --tool=cachegrind` if
+7. **Cache measurement:** use `perf stat` (or `valgrind --tool=cachegrind` if
    `perf` access is restricted) to measure L1/L2 cache miss rates for CSR vs.
    ELLPACK vs. hybrid. Good practice for trusting hardware counters before doing
    the same with Nsight Compute in Phase 3.
-2. **Graph reordering:** implement Reverse Cuthill-McKee to reduce matrix
+
+***This is a strategic turning point based on the size of the matrix graph reordering and graph partitioning will be done.***
+
+8. **Graph reordering:** implement Reverse Cuthill-McKee to reduce matrix
    bandwidth, and re-run your cache measurements before and after.
 
 **Done when:** for a handful of matrices across the skew spectrum, you have a
@@ -238,10 +306,9 @@ Steps:
 4. Wire it into one function: matrix in → sliced, routed, executed per chunk →
    result reassembled.
 
-**Looking ahead:** Phase 6 adds one more check upstream of this router — whether
-the *whole* matrix is structurally hard enough (non-symmetric, ill-conditioned)
-that it shouldn't go through chunk-wise SpMV routing at all, and should be handed
-to PETSc instead.
+**Looking ahead:** Phase 6 uses PETSc separately, only to generate additional
+realistic test matrices for this router to be evaluated against — it does not
+change what this router does or when it runs.
 
 **Done when:** a mixed matrix runs through this function, produces a correct
 result, and shows a measurable speedup over always-cuSPARSE, always-Triton, and
@@ -271,7 +338,7 @@ Steps:
    versus what only goes in the saved file.
 2. Build this as one small logging module that every backend reports through —
    not scattered `print()` calls — so the format stays consistent regardless of
-   which backend (or PETSc, once Phase 6 exists) handled a given chunk.
+   which backend handled a given chunk.
 3. Write a structured log file at the end of every run — plain JSON is the
    simplest honest choice — recording every chunk's routing decision and reason,
    the timing breakdown, total wall-clock time, and overall speedup versus a
@@ -290,42 +357,244 @@ memory and flush once at the end, not chunk-by-chunk.
 
 ---
 
+## Phase 6 — Layout Switching and the Decision Layer (Version 1 Extension)
+*Roughly 2–3 weeks*
 
-## Phase 6 — Packaging
-*Roughly 1–1.5 weeks*
+**Goal:** extend Phase 4's backend router with a full layout-switching layer —
+so the tool doesn't just pick a backend, it also picks the best memory format
+for each chunk before execution, using a lightweight, explainable model.
 
-**Goal:** turn the working pipeline into something a stranger — or a future,
-forgetful version of you — could pick up and use.
+**Why this phase exists and why it's novel:** Phase 4 routes based on one signal
+(Gini skew) to pick an execution backend. But backend and format are two
+separate decisions and the best format often depends on structural properties
+beyond skew — row-length variance, diagonal density, block structure, matrix
+bandwidth. Prior work proves that no single format wins across matrices
+(CSR, ELL, SELL, DIA, hybrid each dominate on different inputs), but most
+existing auto-tuners either pick format OR kernel, rarely both together, and
+almost none expose a human-readable reason for their choice. That explainability
+gap is your edge.
 
-**Why this phase exists:** an unpackaged result helps nobody, including you in
-six months. This is the only phase that's pure communication, not new technical
-risk.
+The decision layer added here is deliberately not a neural network or XGBoost
+stack. It is a small, interpretable decision tree or threshold-rule ensemble —
+something where you can trace exactly which feature triggered which branch and
+explain it out loud. Explainability is a deliberate design goal, not a
+simplification forced by time.
 
 Steps:
-1. Wrap everything in a small CLI (e.g. `graphswitch solve matrix.mtx`), making
-   sure the Phase 5 logging output and the Phase 6 PETSc hand-off are both
-   visible through it, not hidden side paths.
-2. Write unit tests: backend correctness against the CPU baseline, Gini
-   coefficient and symmetry detection on known inputs, router decisions at known
-   thresholds, and at least one test matrix that correctly triggers the PETSc
-   path.
-3. Set up a minimal CI workflow (e.g. GitHub Actions) running those tests on
-   push.
-4. Write the README: quickstart, a real example of the terminal log output, the
-   measured speedup.
-5. Write a short technical note: your phases as the method, the Phase 3 plot as
-   the central figure, an honest limitations section.
+1. Add four or five cheap structural features to your Phase 1 loader, computed
+   once per chunk alongside Gini: row-length variance (how uneven the nonzero
+   distribution is beyond skew alone), matrix bandwidth (how far off-diagonal
+   the nonzeros reach), diagonal density (fraction of diagonal entries that are
+   nonzero, relevant for DIA format), and a simple blockiness check (are
+   nonzeros clustered in dense sub-blocks). All of these are O(nnz) to compute
+   and should take negligible time relative to the SpMV itself.
+2. Add two internal layout formats beyond what Phase 1.5 already built: SELL
+   (sliced ELLPACK, which groups rows into slices and pads only within a slice,
+   reducing waste for moderately skewed input) and DIA (diagonal format, which
+   wins for structured PDE matrices where most nonzeros sit on a small number of
+   diagonals). Implement conversion from CSR to each, measure conversion time
+   explicitly, and log it.
+3. Build a timing database: for each (matrix chunk, format, backend) triple you
+   test, log the measured time into a lightweight JSON store. This becomes your
+   training data for the decision model.
+4. Train a small decision tree (scikit-learn, max depth 4-5) on your timing
+   database, predicting "most suitable format" from the five features. Use
+   "most suitable" (the format that is consistently fast) as the label, not
+   "fastest on this one run" — the latter is noisy and produces brittle models.
+   This specific distinction is called out as an active research gap in DyLaClass
+   (2024) and is part of your research positioning.
+5. Add conversion-cost awareness to the routing policy: the tool should only
+   convert from CSR to a different format if the predicted speedup from that
+   format over multiple repeated SpMV calls exceeds the one-time conversion
+   cost. Track this explicitly — if a matrix will only be used once, CSR wins
+   by default even if SELL would be faster per-multiply.
+6. Update the Phase 5 log to include the chosen format and the specific feature
+   values that triggered the choice, in plain language.
 
-**Done when:** a stranger can clone the repo, run the CLI on a sample matrix,
-and understand exactly what happened and why — without asking you anything.
+**Done when:** for a mixed test set, the tool picks a (format, backend) pair per
+chunk, logs the reason, and the end-to-end time (including conversion cost) beats
+always-CSR-with-best-backend by a measurable margin on matrices that get repeated
+SpMV calls.
+
+**Pitfall:** don't treat the decision model as the contribution — the combination
+of format selection + backend selection + overhead accounting + explainability in
+one lightweight tool is the contribution. The model itself is a means, not the
+point.
 
 ---
 
-## Closing note
+## Phase 7 — GPU Backend Extension and Solver Integration (Version 2)
+*Roughly 2–3 weeks*
 
-This still works fine as the project you talk about in research or engineering
-interviews — nothing about that earlier framing goes away. But the actual point
-of building it, from here, is the one you stated: a small, honest, narrated
-engine that lets someone like you — or a PhD student who's never touched CUDA —
-get a real, working feel for heterogeneous sparse computation quickly, without
-either lying to them about what's happening. That's worth building whether or not anyone else ever sees it.
+**Goal:** add runtime confidence scoring to the router, add lazy conversion
+(defer expensive format conversions until the tool is sure they'll pay off), and
+expose the whole engine as a SciPy and CuPy LinearOperator so existing iterative
+solvers can use your SpMV as their inner loop with no other changes.
+
+**Why this phase exists:** Phase 6 picks a format and executes. But in a real
+solver context, the same matrix is multiplied thousands of times. The tool
+should get smarter over repeated calls — starting with a safe default, tracking
+whether its initial prediction is confirmed by actual hardware timings, and
+switching format lazily only once it's certain the conversion cost has amortized.
+That feedback loop between prediction confidence and observed timing is what
+"overhead-aware" really means in practice.
+
+The LinearOperator integration is the payoff that turns EulerEasel from a
+standalone benchmarking tool into something that sits usefully inside real
+scientific software — someone running iterative CG or GMRES gets your adaptive
+engine as their SpMV kernel by changing one line of their code.
+
+Steps:
+1. Add a confidence score to the routing decision: the decision tree from
+   Phase 6 outputs a class prediction, but most implementations also output a
+   confidence probability. Log this. If confidence is below a threshold (say
+   0.7), default to cuSPARSE rather than making a risky format conversion.
+2. Implement lazy conversion: on the first call, use CSR. On the second call,
+   if the feature profile suggests a different format would win, convert and
+   cache the result. On subsequent calls, use the cached converted matrix. Track
+   how many calls it took before the conversion cost was recovered.
+3. Implement the SciPy binding: wrap your router as a
+   `scipy.sparse.linalg.LinearOperator` subclass where `_matvec` calls your
+   adaptive engine. Test it by passing this operator to `scipy.sparse.linalg.cg`
+   and timing a full solve against the same solve using scipy's default SpMV.
+4. Implement the CuPy binding the same way using
+   `cupyx.scipy.sparse.linalg.LinearOperator`. This version keeps vectors
+   GPU-resident across the entire iterative solve — your matvec, plus the
+   solver's vector arithmetic (dot products, AXPY), never leaves the GPU. This
+   is a more honest performance test than the SciPy version, and a more
+   meaningful real-world number.
+5. Run an end-to-end timing comparison: same matrix, same right-hand side,
+   same solver (CG for symmetric, GMRES for non-symmetric), same convergence
+   tolerance — once with scipy's default SpMV, once with your engine via the
+   LinearOperator hook. Report total solve time, not just per-iteration time.
+
+**Done when:** a real matrix, put through a real iterative solver using your
+LinearOperator, converges to the same answer in measurably less wall-clock time
+than the same solver using scipy's own SpMV — and the log file explains every
+routing decision that happened during the solve.
+
+**Pitfall:** don't report per-iteration speedup if total solve time doesn't
+improve — convergence rate and iteration count are controlled by the solver's
+math, not your engine, so it's theoretically possible to make each iteration
+faster while not reducing the number of iterations needed.
+
+---
+
+## Phase 8 — Chunk-Local Heterogeneous Routing and SpMM (Version 3)
+*Roughly 2–3 weeks — the research contribution that prior work hasn't done*
+
+**Goal:** route different chunks of the same matrix to different (format,
+backend) pairs based on each chunk's local structure, rather than applying one
+global decision to the whole matrix. Add an SpMM path for graph-neural-network
+style workloads where the operation is sparse adjacency times a dense feature
+matrix rather than sparse times a vector.
+
+**Why this phase exists and why it's novel:** every format-switching system
+in the literature makes one decision per matrix. Whole-matrix granularity is
+the safe, obvious choice. But real matrices — especially large ones — are
+structurally heterogeneous: one region might be dense and nearly diagonal
+(suited for DIA), another might have extreme hub rows (better in CSR with
+load-balancing), another might be regular enough to vectorize cleanly in SELL.
+Treating the whole matrix as one object forces a compromise that nobody wins.
+Chunk-local heterogeneous routing — letting different parts of the same matrix
+take different paths — is your cleanest, most defensible research novelty claim.
+Prior work implies it could help (GPU block-partitioning papers, Im et al.'s
+Sparsity framework from 2004) but nobody has built it as a first-class runtime
+feature in a user-facing tool.
+
+SpMM (sparse matrix times dense matrix, not a single vector) is also the
+operation that makes this relevant to GNN training: the message-passing step
+in a GCN layer is exactly SpMM between the adjacency matrix and a dense node-
+feature matrix. Adding an SpMM path makes the tool directly usable for GNN
+inference workloads, connecting your project to an active, highly-cited domain
+without you having to build a GNN framework yourself.
+
+Steps:
+1. Verify empirically that your test matrices are actually structurally
+   heterogeneous chunk to chunk: plot per-chunk Gini scores for a few large
+   real SuiteSparse matrices and check whether different chunks genuinely have
+   different structural profiles. If they don't vary, the whole premise of this
+   phase is wrong for those matrices — document that finding honestly rather
+   than hiding it.
+2. Implement the chunk-local decision: each chunk gets its own feature
+   extraction and its own (format, backend) choice, independently of every
+   other chunk. This requires that format conversions are per-chunk, not
+   per-matrix — make sure converted chunks are cached efficiently so you're
+   not converting the same chunk on every call.
+3. Measure the overhead of per-chunk decisions against per-matrix decisions:
+   the feature extraction and routing decision are cheap, but multiplied by
+   many chunks they could add up. Report this explicitly — if the overhead
+   is negligible relative to computation time, that's a strong result. If it
+   isn't, report the breakeven chunk size.
+4. Add the SpMM Triton kernel: extend your Phase 2 Triton SpMV to handle a
+   dense feature matrix X of shape (N × F) rather than a single vector. The
+   routing logic (check skew, pick backend) applies per chunk of the adjacency
+   matrix, with X passed as the dense side.
+5. Run your full skew-vs-hardware-counter sweep from Phase 3 again, but for
+   SpMM, and check whether the Triton breakdown threshold is different for
+   SpMM than for SpMV. If it shifts, that's an additional, specific finding.
+
+**Done when:** a single large heterogeneous matrix runs through your tool with
+demonstrably different (format, backend) choices on different chunks, each
+logged with its reason, and the end-to-end time beats both always-one-format
+and always-one-backend alternatives. SpMM produces numerically correct output
+validated against the CPU baseline.
+
+**Pitfall:** if real matrices turn out to be structurally homogeneous chunk to
+chunk (step 1 above), chunk-local routing produces no gain and your honest
+finding is "whole-matrix granularity is sufficient for these inputs." That's a
+real result, not a failure — it tells you something true about when local
+routing matters. Don't manufacture a gain that isn't there.
+
+---
+
+## Phase 9 — Packaging and Final Report
+*Roughly 1.5–2 weeks*
+
+**Goal:** turn the complete pipeline into two deliverables: a clean, installable
+tool and a short technical write-up that can be read as a standalone document.
+
+Steps:
+1. Clean CLI covering all three version capabilities: `EulerEasel bench`,
+   `EulerEasel solve`, `EulerEasel analyze` (the analysis command prints the
+   per-chunk structural profile before running anything, so a user can inspect
+   their matrix before committing to a solve).
+2. Unit tests: correctness of every backend against the CPU baseline, feature
+   extraction on known inputs, router decisions at known thresholds, format
+   conversion round-trips, LinearOperator integration against scipy's own CG
+   on a known-answer test problem.
+3. CI on GitHub Actions.
+4. README with a quickstart, a real terminal log example, and the end-to-end
+   solver timing comparison as the headline result.
+5. Technical write-up: frame the three versions as V1/V2/V3 with a clear
+   statement of what each adds. The central figure is the Phase 3 skew-vs-
+   hardware-counter plot. The secondary figure is the chunk-local routing
+   result from Phase 8. The limitations section is honest about matrix size,
+   GPU model, and the fact that your decision model was trained on synthetic
+   and SuiteSparse matrices, not arbitrary real-world inputs.
+
+**Done when:** a stranger clones the repo, runs the CLI on a sample matrix,
+and gets back a correct result plus a human-readable log and a speedup number,
+without asking you anything. The write-up stands on its own without you in the
+room to explain it.
+
+---
+
+## Version Summary
+
+- **Version 1 (Phases 0–6):** CPU-only, whole-matrix routing across three
+  backends and multiple formats, explainable decisions, SciPy integration.
+  This is a complete, presentable, self-contained product.
+
+- **Version 2 (Phase 7):** GPU backend, runtime confidence, lazy conversion,
+  overhead accounting, CuPy LinearOperator, end-to-end iterative solver timing.
+  This is the research and engineering extension that puts the tool inside real
+  solver workflows.
+
+- **Version 3 (Phase 8):** chunk-local heterogeneous routing, SpMM path for
+  GNN-style workloads. This is the novel research contribution that has no
+  direct precedent in the format-switching literature.
+
+Each version is independently shippable. If you finish Version 1 and time runs
+out, you have a complete project. If you reach Version 3, you have a credible
+systems research contribution built on top of it.
