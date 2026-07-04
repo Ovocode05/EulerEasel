@@ -4,11 +4,11 @@
 #include<algorithm>
 #include<cmath>
 #include "./utils/datatype.h"
-#include "./utils/format/csr_format.h"
-#include "./utils/format/ellpack_format.h"
-#include "./utils/vector_gen.h"
-#include "./utils/create_file.h"
-#include "./utils/file_parser.h"
+#include "./../utils/format/csr_format.h"
+#include "./../utils/format/ellpack_format.h"
+#include "./../utils/datatype.h"
+#include "./../utils/create_file.h"
+#include "./../utils/file_parser.h"
 using namespace std;
 
 tuple<vector<vector<double>>, vector<vector<int>>>hybrid_format(hybd& hybrid, vector<matrix_el>& matrix, int32_t r, int32_t c, int32_t nnz){
