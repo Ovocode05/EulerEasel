@@ -1,54 +1,58 @@
 #pragma once
-#include<iostream>
-#include<vector>
-#include<fstream>
-#include<sstream>
-#include<algorithm>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
 #include "./../utils/datatype.h"
 using namespace std;
 
-int file_parser(string filename, vector<matrix_el>& matrix){
+void file_parser(string filename, vector<matrix_el> &matrix)
+{
 
-    //get the file
+    // get the file
     ifstream file(filename);
-    if(!file.is_open()){
-        cerr<<"couldn't open the file"<<endl;
-        return -1;
+    if (!file.is_open())
+    {
+        cerr << "couldn't open the file" << endl;
+        return;
     }
 
     string line;
     bool first_data_line = false;
 
-    //get the rest line and parse the data
-    while(getline(file, line)){
-        if(line=="" || line[0]=='%'){
+    // get the rest line and parse the data
+    while (getline(file, line))
+    {
+        if (line == "" || line[0] == '%')
+        {
             continue;
         }
 
-        if(!first_data_line){
-            first_data_line=true;
-            continue; 
-        } 
-        
-        //load the string into the stream
+        if (!first_data_line)
+        {
+            first_data_line = true;
+            continue;
+        }
+
+        // load the string into the stream
         stringstream ss(line);
         int32_t rows;
         int32_t cols;
         double vals;
-        if(ss >> rows >> cols >> vals){
+        if (ss >> rows >> cols >> vals)
+        {
             matrix_el el;
-            el.row_el = rows-1;
-            el.col_el = cols-1;
+            el.row_el = rows - 1;
+            el.col_el = cols - 1;
             el.val_el = vals;
             matrix.push_back(el);
         }
     }
 
-    //lambda function
-    sort(matrix.begin(), matrix.end(), [](const matrix_el& a, const matrix_el& b){
+    // lambda function
+    sort(matrix.begin(), matrix.end(), [](const matrix_el &a, const matrix_el &b)
+         {
         if(a.row_el!=b.row_el) return a.row_el < b.row_el;
-        return a.col_el < b.col_el;
-    });
-
-    return 0;
+        return a.col_el < b.col_el; });
 }

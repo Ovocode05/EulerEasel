@@ -1,9 +1,9 @@
-#include<iostream>
-#include<string>
-#include<vector>
-#include<algorithm>
-#include<cmath>
-#include "./utils/datatype.h"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include "./../utils/datatype.h"
 #include "./../utils/format/csr_format.h"
 #include "./../utils/format/ellpack_format.h"
 #include "./../utils/datatype.h"
@@ -11,52 +11,62 @@
 #include "./../utils/file_parser.h"
 using namespace std;
 
-tuple<vector<vector<double>>, vector<vector<int>>>hybrid_format(hybd& hybrid, vector<matrix_el>& matrix, int32_t r, int32_t c, int32_t nnz){
+tuple<vector<vector<double>>, vector<vector<int>>> hybrid_format(hybd &hybrid, vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nnz)
+{
 
     vector<int32_t> row_counter(r, 0);
-    for(const auto& el : matrix){
+    for (const auto &el : matrix)
+    {
         row_counter[el.row_el]++;
     }
-    
+
     vector<int32_t> sorted = row_counter;
     sort(sorted.begin(), sorted.end());
     int32_t threshold = sorted[0];
     int32_t max_jump = 0;
-    for(int32_t i=1;i<sorted.size();i++){
-        int32_t jump = sorted[i] - sorted[i-1];
-        if(jump > max_jump){
+    for (int32_t i = 1; i < sorted.size(); i++)
+    {
+        int32_t jump = sorted[i] - sorted[i - 1];
+        if (jump > max_jump)
+        {
             max_jump = jump;
-            threshold = sorted[i-1];
+            threshold = sorted[i - 1];
         }
     }
 
-    for(const auto& el: matrix){
+    for (const auto &el : matrix)
+    {
         int32_t row = el.row_el;
-        if(row_counter[row]<=threshold){
-            //apply csr
+        if (row_counter[row] <= threshold)
+        {
+            // apply csr
             hybrid.ell_entries.emplace_back(el);
-        }else{
+        }
+        else
+        {
             // apply ell
             hybrid.csr_entries.emplace_back(el);
         }
     }
 
-    //measure r,c,nnz for each part of the matrix
+    // measure r,c,nnz for each part of the matrix
     int32_t nnz_csr = hybrid.csr_entries.size();
     int32_t nnz_ell = hybrid.ell_entries.size();
 
-    Csrformat(hybrid.csr_entries, r,c,nnz_csr, hybrid.csr_part);
-    auto [A,J] = ellpack_format(hybrid.ell_entries, r, c,nnz_ell, hybrid.el_part);
+    Csrformat(hybrid.csr_entries, r, c, nnz_csr, hybrid.csr_part);
+    auto [A, J] = ellpack_format(hybrid.ell_entries, r, c, nnz_ell, hybrid.el_part);
 
-    return {A,J};
+    return {A, J};
 }
 
-vector<double> SpMv_kernel_hybrid(hybd& hybrid, const vector<double>& x, vector<vector<double>>& A, vector<vector<int32_t>>& J, int32_t r){
+vector<double> SpMv_kernel_hybrid(hybd &hybrid, const vector<double> &x, vector<vector<double>> &A, vector<vector<int32_t>> &J, int32_t r)
+{
     auto y_csr = SpMV_kernel_AVX(hybrid.csr_part, x);
-    auto y_ell = ell_pack_AVX_vertical(x, A,J); 
-    vector<double> y_new(r,0);
+    auto y_ell = ell_pack_AVX_vertical(x, A, J);
+    vector<double> y_new(r, 0);
 
-    for(int32_t i = 0; i < r; i++){
+    for (int32_t i = 0; i < r; i++)
+    {
         y_new[i] = y_csr[i] + y_ell[i];
     }
 
