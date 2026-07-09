@@ -34,6 +34,10 @@ __global__ void spmv_kernel_C(
     }
 }
 
+__global__ void spmv_kernel_E()
+{
+}
+
 int main()
 {
     vector<matrix_el> Mat;
