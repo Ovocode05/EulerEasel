@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include <vector>
@@ -11,7 +12,7 @@
 #include "./../utils/file_parser.h"
 using namespace std;
 
-tuple<vector<vector<double>>, vector<vector<int>>> hybrid_format(hybd &hybrid, vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nnz)
+tuple<vector<vector<double>>, vector<vector<int>>, CSR> hybrid_format(hybd &hybrid, vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nnz)
 {
 
     vector<int32_t> row_counter(r, 0);
@@ -56,7 +57,7 @@ tuple<vector<vector<double>>, vector<vector<int>>> hybrid_format(hybd &hybrid, v
     Csrformat(hybrid.csr_entries, r, c, nnz_csr, hybrid.csr_part);
     auto [A, J] = ellpack_format(hybrid.ell_entries, r, c, nnz_ell, hybrid.el_part);
 
-    return {A, J};
+    return {A, J, hybrid.csr_part};
 }
 
 vector<double> SpMv_kernel_hybrid(hybd &hybrid, const vector<double> &x, vector<vector<double>> &A, vector<vector<int32_t>> &J, int32_t r)
