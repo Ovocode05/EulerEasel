@@ -36,7 +36,6 @@ struct HybridFeatures
 {
     double tail_row_fraction = 0.0;
     double tail_work_fraction = 0.0;
-    double trimmed_ell_efficiency = 0.0;
 };
 
 struct MatrixFeatures
