@@ -175,30 +175,30 @@ public:
     }
 };
 
-int main()
-{
-    // set up
-    CSR raw_csr;
-    raw_csr.rptr = {0, 2, 3, 5};              // Row pointers (4 elements for 3 rows)
-    raw_csr.ind = {0, 2, 1, 0, 2};            // Column indices for non-zero elements
-    raw_csr.vals = {1.0, 2.0, 3.0, 4.0, 5.0}; // The actual values
-    raw_csr.num_rows = 3;
+// int main()
+// {
+//     // set up
+//     CSR raw_csr;
+//     raw_csr.rptr = {0, 2, 3, 5};              // Row pointers (4 elements for 3 rows)
+//     raw_csr.ind = {0, 2, 1, 0, 2};            // Column indices for non-zero elements
+//     raw_csr.vals = {1.0, 2.0, 3.0, 4.0, 5.0}; // The actual values
+//     raw_csr.num_rows = 3;
 
-    int32_t total_columns = 3;
+//     int32_t total_columns = 3;
 
-    // 2. Wrap the raw data inside the CsrMatrix class
-    // We instantiate it with <double> to match the raw_csr.vals type
-    CsrMatrix<double> matrix(raw_csr, total_columns);
+//     // 2. Wrap the raw data inside the CsrMatrix class
+//     // We instantiate it with <double> to match the raw_csr.vals type
+//     CsrMatrix<double> matrix(raw_csr, total_columns);
 
-    // 3. Pass the matrix wrapper into the MatrixExtractor
-    MatrixExtractor<double> extractor(matrix);
+//     // 3. Pass the matrix wrapper into the MatrixExtractor
+//     MatrixExtractor<double> extractor(matrix);
 
-    // 4. Run the calculation
-    // This will process the 3 rows using the internal logic and operation
-    MatrixFeatures res = extractor.extract_all();
+//     // 4. Run the calculation
+//     // This will process the 3 rows using the internal logic and operation
+//     MatrixFeatures res = extractor.extract_all();
 
-    // 5. Output the calculated result
-    cout << "The calculated extraction sum is done" << endl;
+//     // 5. Output the calculated result
+//     cout << "The calculated extraction sum is done" << endl;
 
-    return 0;
-}
+//     return 0;
+// }
