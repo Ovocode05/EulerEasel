@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 using namespace std;
 
 enum class Device
@@ -40,6 +41,17 @@ struct CPUParameters
 struct HybridParameters
 {
     int32_t ell_width = 0;
+};
+
+struct strategy
+{
+    Device device;
+    Format format;
+    Kernel kernel;
+    bool requires_conversion;
+    bool requires_transfer;
+    bool feasiblel;
+    string reject_reason;
 };
 
 struct ExecutionPlan
