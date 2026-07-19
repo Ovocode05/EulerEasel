@@ -91,7 +91,7 @@ The repository currently includes:
 ### Build with CUDA enabled
 
 ```bash
-cd /home/fakeheadset/Projects/EulerEasel
+cd ~project_directory/root
 rm -rf build
 cmake -S . -B build -DEULER_BUILD_CUDA=ON
 cmake --build build -j4
@@ -100,7 +100,7 @@ cmake --build build -j4
 ### Build without CUDA
 
 ```bash
-cd /home/fakeheadset/Projects/EulerEasel
+cd ~project_directory/root
 rm -rf build
 cmake -S . -B build -DEULER_BUILD_CUDA=OFF
 cmake --build build -j4
