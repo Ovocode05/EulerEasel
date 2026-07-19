@@ -8,6 +8,13 @@ enum class Device
     GPU
 };
 
+enum class Architecture
+{
+    Proc,
+    AVX,
+    CUDA
+};
+
 enum class Format
 {
     COO,
@@ -21,6 +28,10 @@ enum class Kernel
     CPU_CSR,
     CPU_ELL,
     CPU_HYB,
+    CPU_CSR_AVX,
+    CPU_ELL_AVX_x4,
+    CPU_ELL_AVX_x16,
+    CPU_HYB_AVX,
     GPU_CSR,
     GPU_ELL,
     GPU_HYB
@@ -47,11 +58,9 @@ struct strategy
 {
     Device device;
     Format format;
+    Architecture arch;
     Kernel kernel;
-    bool requires_conversion;
-    bool requires_transfer;
-    bool feasiblel;
-    string reject_reason;
+    bool is_available = true;
 };
 
 struct ExecutionPlan
