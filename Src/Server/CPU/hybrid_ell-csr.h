@@ -14,6 +14,7 @@ using namespace std;
 
 tuple<vector<vector<double>>, vector<vector<int>>, CSR> hybrid_format(hybd &hybrid, vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nnz)
 {
+    (void)nnz;
 
     vector<int32_t> row_counter(r, 0);
     for (const auto &el : matrix)
@@ -25,7 +26,7 @@ tuple<vector<vector<double>>, vector<vector<int>>, CSR> hybrid_format(hybd &hybr
     sort(sorted.begin(), sorted.end());
     int32_t threshold = sorted[0];
     int32_t max_jump = 0;
-    for (int32_t i = 1; i < sorted.size(); i++)
+    for (size_t i = 1; i < sorted.size(); i++)
     {
         int32_t jump = sorted[i] - sorted[i - 1];
         if (jump > max_jump)

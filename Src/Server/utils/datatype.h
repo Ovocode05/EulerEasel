@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
-// #include <cuda_runtime.h>
+#include <cuda_runtime.h>
 #include "./matrix_dim.h"
 using namespace std;
 
@@ -37,27 +37,27 @@ struct hybd
     vector<matrix_el> csr_entries;
 };
 
-// struct gpuCSR_Buffer
-// {
-//     int32_t *d_rptr;
-//     int32_t *d_ind;
-//     double *d_vals;
-//     int32_t num_rows;
+struct gpuCSR_Buffer
+{
+    int32_t *d_rptr;
+    int32_t *d_ind;
+    double *d_vals;
+    int32_t num_rows;
 
-//     void allocate(int32_t r_size, int32_t i_size, int32_t c_size)
-//     {
-//         cudaMalloc(&d_rptr, r_size * sizeof(int32_t));
-//         cudaMalloc(&d_ind, c_size * sizeof(int32_t));
-//         cudaMalloc(&d_vals, i_size * sizeof(double));
-//     }
+    void allocate(int32_t r_size, int32_t i_size, int32_t c_size)
+    {
+        cudaMalloc(&d_rptr, r_size * sizeof(int32_t));
+        cudaMalloc(&d_ind, c_size * sizeof(int32_t));
+        cudaMalloc(&d_vals, i_size * sizeof(double));
+    }
 
-//     ~gpuCSR_Buffer()
-//     {
-//         if (d_rptr)
-//             cudaFree(d_rptr);
-//         if (d_vals)
-//             cudaFree(d_vals);
-//         if (d_ind)
-//             cudaFree(d_ind);
-//     }
-// };
+    ~gpuCSR_Buffer()
+    {
+        if (d_rptr)
+            cudaFree(d_rptr);
+        if (d_vals)
+            cudaFree(d_vals);
+        if (d_ind)
+            cudaFree(d_ind);
+    }
+};

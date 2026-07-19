@@ -18,8 +18,7 @@ public:
     {
         if (!hardware.has_gpu)
         {
-            auto it = strategies.begin();
-            while (it != strategies.end())
+            for (auto it = strategies.begin(); it != strategies.end(); ++it)
             {
                 if (it->device == Device::GPU)
                     it->is_available = false;
@@ -28,13 +27,10 @@ public:
 
         if (!hardware.has_AVX || !hardware.has_openMP)
         {
-            auto it = strategies.begin();
-            while (it != strategies.end())
+            for (auto it = strategies.begin(); it != strategies.end(); ++it)
             {
                 if (it->arch == Architecture::AVX)
                     it->is_available = false;
-                else
-                    ++it;
             }
         }
     }

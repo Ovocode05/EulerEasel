@@ -134,9 +134,9 @@ int main()
     vector<double> A_flat(A.size() * A[0].size());
     vector<int32_t> J_flat(J.size() * J[0].size());
 
-    for (int32_t i = 0; i < A.size(); ++i)
+    for (size_t i = 0; i < A.size(); ++i)
     {
-        for (int32_t j = 0; j < A[0].size(); ++j)
+        for (size_t j = 0; j < A[0].size(); ++j)
         {
             A_flat[j * r + i] = A[i][j];
             J_flat[j * r + i] = J[i][j];

@@ -9,6 +9,7 @@ using namespace std;
 
 void Csrformat(const vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nnz, CSR &csr)
 {
+    (void)c;
     /*
     .mtx data to csr format that is 3 arrays [columns_indices, row_ptr, values]
     */

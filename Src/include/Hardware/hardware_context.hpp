@@ -157,7 +157,6 @@ void query_hardware_context(HardwareContext &ctx)
     {
         int device_count = 0;
         cudaError_t err = cudaGetDeviceCount(&device_count);
-        cudaError_t err = cudaGetDeviceCount(&device_count);
 
         std::cout << "cudaGetDeviceCount returned "
                   << cudaGetErrorName(err)

@@ -89,7 +89,7 @@ vector<double> ell_spMV_AVX(const vector<double> &x, const vector<vector<double>
 
     __m128i vec_minus_one = _mm_set1_epi32(-1);
 
-#pragma parallel for default(none) shared(numrows, numcols, y, x, A, J) schedule(runtime)
+#pragma omp parallel for default(none) shared(numrows, numcols, y, x, A, J, vec_minus_one) schedule(runtime)
     for (int32_t i = 0; i < numrows; i++)
     {
 
@@ -147,7 +147,7 @@ vector<double> ell_pack_AVX_vertical(const vector<double> &x, const vector<vecto
         }
     }
 
-#pragma parallel for default(none) shared(numrows, maxpadd, y, x, A, J) schedule(runtime)
+#pragma omp parallel for default(none) shared(numrows, maxpadd, y, x, A, J, vals, inds) schedule(runtime)
     // safe auto privatization for openMP
     for (int32_t i = 0; i <= numrows - 4; i += 4)
     {
