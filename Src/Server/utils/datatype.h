@@ -1,7 +1,39 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <cstddef>
+
+#if defined(__has_include)
+#if __has_include(<cuda_runtime.h>)
 #include <cuda_runtime.h>
+#define EULER_HAS_CUDA_RUNTIME 1
+#else
+#define EULER_HAS_CUDA_RUNTIME 0
+#endif
+#else
+#include <cuda_runtime.h>
+#define EULER_HAS_CUDA_RUNTIME 1
+#endif
+
+#if !EULER_HAS_CUDA_RUNTIME
+using cudaError_t = int;
+
+template <typename T>
+inline cudaError_t cudaMalloc(T **ptr, std::size_t size)
+{
+    (void)ptr;
+    (void)size;
+    return 0;
+}
+
+template <typename T>
+inline cudaError_t cudaFree(T *ptr)
+{
+    (void)ptr;
+    return 0;
+}
+#endif
+
 #include "./matrix_dim.h"
 using namespace std;
 

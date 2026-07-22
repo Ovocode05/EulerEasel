@@ -7,15 +7,16 @@
 #include "./../utils/datatype.h"
 using namespace std;
 
-void file_parser(string filename, vector<matrix_el> &matrix)
+vector<matrix_el> file_parser(string filename)
 {
+    vector<matrix_el> matrix;
 
     // get the file
     ifstream file(filename);
     if (!file.is_open())
     {
         cerr << "couldn't open the file" << endl;
-        return;
+        return {};
     }
 
     string line;
@@ -53,6 +54,8 @@ void file_parser(string filename, vector<matrix_el> &matrix)
     // lambda function
     sort(matrix.begin(), matrix.end(), [](const matrix_el &a, const matrix_el &b)
          {
-        if(a.row_el!=b.row_el) return a.row_el < b.row_el;
-        return a.col_el < b.col_el; });
+                if(a.row_el!=b.row_el) return a.row_el < b.row_el;
+                return a.col_el < b.col_el; });
+
+    return matrix;
 }

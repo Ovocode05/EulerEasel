@@ -1,26 +1,37 @@
 cmake_minimum_required(VERSION 3.20)
-option(EULER_BUILD_CUDA "Build the CUDA demo target when CUDA is available" OFF)
+
+option(EULER_BUILD_CUDA "Build with CUDA support" OFF)
 
 if(EULER_BUILD_CUDA)
-    find_program(GCC15_BIN gcc-15)
-    find_program(GXX15_BIN g++-15)
-    if(GCC15_BIN AND GXX15_BIN)
-        message(STATUS "CUDA build requested: using gcc-15/g++-15 host compiler.")
-        set(CMAKE_C_COMPILER "${GCC15_BIN}" CACHE FILEPATH "C compiler" FORCE)
-        set(CMAKE_CXX_COMPILER "${GXX15_BIN}" CACHE FILEPATH "C++ compiler" FORCE)
-        set(CMAKE_CUDA_HOST_COMPILER "${GCC15_BIN}" CACHE FILEPATH "CUDA host compiler" FORCE)
-    else()
-        message(STATUS "CUDA build requested but gcc-15/g++-15 not found; using default host compiler.")
+    find_program(NVCC_BIN NAMES nvcc PATHS /usr/local/cuda/bin /usr/local/cuda-*/bin ENV PATH)
+
+    if(NOT NVCC_BIN)
+        message(WARNING "EULER_BUILD_CUDA=ON but no nvcc compiler was found; disabling CUDA support")
+        set(EULER_BUILD_CUDA OFF CACHE BOOL "Build with CUDA support" FORCE)
+    elseif(NOT CMAKE_CUDA_COMPILER)
+        set(CMAKE_CUDA_COMPILER "${NVCC_BIN}" CACHE FILEPATH "Path to nvcc" FORCE)
     endif()
 endif()
 
 project(EulerEasel LANGUAGES CXX)
 
+if(EULER_BUILD_CUDA)
+    enable_language(CUDA)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(OpenMP REQUIRED COMPONENTS CXX)
+find_package(OpenMP REQUIRED)
+
+set(PYBIND11_FINDPYTHON ON)
+find_package(Python REQUIRED COMPONENTS Interpreter Development)
+find_package(pybind11 CONFIG REQUIRED)
+
+############################################################
+# Common interface
+############################################################
 
 add_library(euler_common INTERFACE)
 
@@ -29,27 +40,87 @@ target_include_directories(euler_common INTERFACE
     ${CMAKE_SOURCE_DIR}/Src/include
 )
 
-target_compile_features(euler_common INTERFACE cxx_std_17)
-
 target_compile_options(euler_common INTERFACE
     -Wall
     -Wextra
+    -O3
+    -march=native
     -mavx2
     -mfma
 )
 
-add_executable(euler_strategy
-    Src/include/Strategy/strategy.cpp
+############################################################
+# Core runtime library
+############################################################
+
+add_library(euler_core INTERFACE)
+
+target_link_libraries(euler_core
+INTERFACE
+    euler_common
+    OpenMP::OpenMP_CXX
 )
 
-target_link_libraries(euler_strategy PRIVATE euler_common OpenMP::OpenMP_CXX)
+############################################################
+# Python modules
+############################################################
+
+set(EULER_PYTHON_MODULES matrix_extractor filter)
+
+foreach(module_name IN LISTS EULER_PYTHON_MODULES)
+    pybind11_add_module(${module_name}
+        Src/include/bindings.cpp
+    )
+
+    target_link_libraries(${module_name}
+    PRIVATE
+        euler_core
+    )
+
+    target_include_directories(${module_name} PRIVATE
+        ${CMAKE_SOURCE_DIR}/Src
+        ${CMAKE_SOURCE_DIR}/Src/include
+        ${CMAKE_SOURCE_DIR}/Src/Server
+    )
+
+    target_compile_definitions(${module_name} PRIVATE
+        EULER_PYBIND_MODULE_NAME=${module_name}
+    )
+
+    set_target_properties(${module_name} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Src/include
+    )
+
+    add_custom_command(TARGET ${module_name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/Python"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:${module_name}>"
+            "${CMAKE_SOURCE_DIR}/Python/$<TARGET_FILE_NAME:${module_name}>"
+    )
+endforeach()
+
+############################################################
+# CUDA
+############################################################
 
 if(EULER_BUILD_CUDA)
+
     find_package(CUDAToolkit QUIET)
-    if(CUDAToolkit_FOUND)
-        set(CMAKE_CUDA_FLAGS_INIT "-allow-unsupported-compiler -Xcompiler=-fopenmp -Xcompiler=-mavx2 -Xcompiler=-mfma -Xcompiler=-march=native")
+
+    if(CUDAToolkit_FOUND AND CMAKE_CUDA_COMPILER)
+
         enable_language(CUDA)
-        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler -Xcompiler=-fopenmp -Xcompiler=-mavx2 -Xcompiler=-mfma -Xcompiler=-march=native")
+
+        target_compile_definitions(euler_common
+        INTERFACE
+            HAS_CUDA=1
+        )
+
+        target_link_libraries(euler_common
+        INTERFACE
+            CUDA::cudart
+        )
+
         add_executable(euler_cuda
             Src/Server/CUDA/kernel.cu
         )
@@ -60,42 +131,41 @@ if(EULER_BUILD_CUDA)
             ${CMAKE_SOURCE_DIR}/Src/Server
         )
 
-        target_compile_features(euler_cuda PRIVATE cxx_std_17)
-        target_compile_definitions(euler_cuda PRIVATE HAS_CUDA=1)
-        target_link_libraries(euler_cuda PRIVATE CUDA::cudart OpenMP::OpenMP_CXX stdc++)
-        target_link_libraries(euler_cuda PRIVATE euler_common)
+        target_link_libraries(euler_cuda PRIVATE
+            euler_common
+            CUDA::cudart
+            OpenMP::OpenMP_CXX
+            stdc++
+        )
+
         set_target_properties(euler_cuda PROPERTIES
             CUDA_STANDARD 17
             CUDA_ARCHITECTURES native
         )
 
-        # Allow the CPU strategy executable to detect CUDA at runtime when CUDA is enabled.
-        target_compile_definitions(euler_strategy PRIVATE HAS_CUDA=1)
-        target_link_libraries(euler_strategy PRIVATE CUDA::cudart)
+        message(STATUS "CUDA support enabled")
+
     else()
-        message(STATUS "CUDA Toolkit not found; skipping CUDA demo target")
+
+        message(STATUS "CUDA Toolkit or CUDA compiler not available; continuing without CUDA")
+
     endif()
+
 endif()
 
-add_custom_target(run_strategy
-    COMMAND $<TARGET_FILE:euler_strategy>
-    DEPENDS euler_strategy
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Running the EulerEasel strategy demo"
-)
+############################################################
+# Status
+############################################################
 
-if(TARGET euler_cuda)
-    add_custom_target(run_cuda
-        COMMAND $<TARGET_FILE:euler_cuda>
-        DEPENDS euler_cuda
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Running the EulerEasel CUDA demo"
-    )
-endif()
+message(STATUS "")
+message(STATUS "========== EulerEasel ==========")
+message(STATUS "Python module : matrix_extractor")
+message(STATUS "Core library  : euler_core")
 
-message(STATUS "EulerEasel configured. Primary build target: euler_strategy")
-if(TARGET euler_cuda)
-    message(STATUS "CUDA target available: euler_cuda")
+if(EULER_BUILD_CUDA)
+    message(STATUS "CUDA build    : ON")
 else()
-    message(STATUS "CUDA target disabled by default; run with -DEULER_BUILD_CUDA=ON if you want the CUDA demo")
+    message(STATUS "CUDA build    : OFF")
 endif()
+
+message(STATUS "================================")

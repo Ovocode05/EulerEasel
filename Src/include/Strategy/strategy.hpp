@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -6,9 +8,8 @@
 #include "./../WorkLoadCTX/state.hpp"
 #include "./../WorkLoadCTX/workload.hpp"
 #include "./../Hardware/hardware_context.hpp"
-#include "./../Matrix/features.hpp"
-using namespace std;
 
+using namespace std;
 class Hardware_filter
 {
 public:
@@ -57,42 +58,38 @@ public:
 
     void generate(
         vector<strategy> &str,
-        const HardwareContext &hardware);
-};
-
-void StrategyRegister::generate(
-    vector<strategy> &str,
-    const HardwareContext &hardware)
-{
-    auto strategies = StrategyRegister::create();
-    Hardware_filter().apply(str, hardware);
-}
-
-int main()
-{
-#ifdef HAS_CUDA
-    std::cout << "CUDA detection compiled in\n";
-#else
-    std::cout << "CUDA detection NOT compiled\n";
-#endif
-    HardwareContext hrd;
-    query_hardware_context(hrd);
-    checkAVX_support(hrd);
-    check_openmp_support(hrd);
-    print_hardware_context(hrd);
-    StrategyRegister str;
-    static vector<strategy> stat_vec = str.create();
-    str.generate(stat_vec, hrd);
-
-    for (auto el : stat_vec)
+        const HardwareContext &hardware)
     {
-        if (!el.is_available)
-            continue;
-        // magic_enum::enum_name automatically grabs the string "GPU", "TensorCore", etc.
-        cout << magic_enum::enum_name(el.device) << " "
-             << magic_enum::enum_name(el.arch) << " "
-             << magic_enum::enum_name(el.format) << " "
-             << magic_enum::enum_name(el.kernel) << endl;
+        auto strategies = StrategyRegister::create();
+        Hardware_filter().apply(str, hardware);
     }
-    return 0;
-}
+    vector<strategy> get_strategies(HardwareContext &hrd)
+    {
+        query_hardware_context(hrd);
+        checkAVX_support(hrd);
+        check_openmp_support(hrd);
+        print_hardware_context(hrd);
+        StrategyRegister str;
+        static vector<strategy> stat_vec = str.create();
+        str.generate(stat_vec, hrd);
+
+        return stat_vec;
+    }
+
+    vector<string> get_strategy_names(vector<strategy> &strategies)
+    {
+        vector<string> names;
+        for (const auto &s : strategies)
+        {
+            if (!s.is_available)
+                continue;
+            string name = string("Device: ") + string(magic_enum::enum_name(s.device)) +
+                          ", Format: " + string(magic_enum::enum_name(s.format)) +
+                          ", Architecture: " + string(magic_enum::enum_name(s.arch)) +
+                          ", Kernel: " + string(magic_enum::enum_name(s.kernel));
+            names.push_back(name);
+        }
+
+        return names;
+    }
+};

@@ -103,7 +103,7 @@ void Hybrid(const int32_t *__restrict__ d_rptr,
 int main()
 {
     vector<matrix_el> Mat;
-    file_parser("/home/fakeheadset/Projects/EulerEasel/Data/bcsstk18.mtx", Mat);
+    Mat = file_parser("/home/fakeheadset/Projects/EulerEasel/Data/bcsstk18.mtx");
 
     // #343fff creating the threads
     int32_t threads = 256;

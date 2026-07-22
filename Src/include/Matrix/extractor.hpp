@@ -3,6 +3,10 @@
 #include <cmath>
 #include "./features.hpp"
 #include "./canonical.hpp"
+#include "./../../Server/utils/format/csr_format.h"
+#include "./../../Server/utils/file_parser.h"
+#include "./../../include/Strategy/strategy.hpp"
+#include "./../../Server/utils/datatype.h"
 
 using namespace std;
 template <typename T>
@@ -28,7 +32,7 @@ private:
     }
 
 public:
-    MatrixExtractor(CsrMatrix<T> csrmat) : csrmat_(csrmat) {}
+    MatrixExtractor(CsrMatrix<T> &csrmat) : csrmat_(csrmat) {}
 
     ScaleFeatures extract_scale()
     {
@@ -173,32 +177,29 @@ public:
         return {
             s, r, e, l, h};
     }
+
+    vector<int> to_flat_vector(MatrixFeatures mat)
+    {
+        vector<int> flat_vector;
+        flat_vector.push_back(mat.scale.rows);
+        flat_vector.push_back(mat.scale.cols);
+        flat_vector.push_back(mat.scale.nnz);
+
+        flat_vector.push_back(static_cast<int>(mat.row_distribution.mean));
+        flat_vector.push_back(static_cast<int>(mat.row_distribution.cv));
+        flat_vector.push_back(mat.row_distribution.max);
+        flat_vector.push_back(static_cast<int>(mat.row_distribution.gini));
+        flat_vector.push_back(static_cast<int>(mat.row_distribution.p50));
+        flat_vector.push_back(static_cast<int>(mat.row_distribution.p90));
+        flat_vector.push_back(static_cast<int>(mat.row_distribution.p99));
+
+        flat_vector.push_back(static_cast<int>(mat.ell.efficiency));
+
+        flat_vector.push_back(static_cast<int>(mat.locality.avg_column_gap));
+
+        flat_vector.push_back(static_cast<int>(mat.hybrid.tail_row_fraction));
+        flat_vector.push_back(static_cast<int>(mat.hybrid.tail_work_fraction));
+
+        return flat_vector;
+    }
 };
-
-// int main()
-// {
-//     // set up
-//     CSR raw_csr;
-//     raw_csr.rptr = {0, 2, 3, 5};              // Row pointers (4 elements for 3 rows)
-//     raw_csr.ind = {0, 2, 1, 0, 2};            // Column indices for non-zero elements
-//     raw_csr.vals = {1.0, 2.0, 3.0, 4.0, 5.0}; // The actual values
-//     raw_csr.num_rows = 3;
-
-//     int32_t total_columns = 3;
-
-//     // 2. Wrap the raw data inside the CsrMatrix class
-//     // We instantiate it with <double> to match the raw_csr.vals type
-//     CsrMatrix<double> matrix(raw_csr, total_columns);
-
-//     // 3. Pass the matrix wrapper into the MatrixExtractor
-//     MatrixExtractor<double> extractor(matrix);
-
-//     // 4. Run the calculation
-//     // This will process the 3 rows using the internal logic and operation
-//     MatrixFeatures res = extractor.extract_all();
-
-//     // 5. Output the calculated result
-//     cout << "The calculated extraction sum is done" << endl;
-
-//     return 0;
-// }
