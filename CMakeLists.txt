@@ -29,10 +29,6 @@ set(PYBIND11_FINDPYTHON ON)
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 find_package(pybind11 CONFIG REQUIRED)
 
-############################################################
-# Common interface
-############################################################
-
 add_library(euler_common INTERFACE)
 
 target_include_directories(euler_common INTERFACE
@@ -49,10 +45,6 @@ target_compile_options(euler_common INTERFACE
     -mfma
 )
 
-############################################################
-# Core runtime library
-############################################################
-
 add_library(euler_core INTERFACE)
 
 target_link_libraries(euler_core
@@ -60,10 +52,6 @@ INTERFACE
     euler_common
     OpenMP::OpenMP_CXX
 )
-
-############################################################
-# Python modules
-############################################################
 
 set(EULER_PYTHON_MODULES matrix_extractor filter)
 
@@ -98,10 +86,6 @@ foreach(module_name IN LISTS EULER_PYTHON_MODULES)
             "${CMAKE_SOURCE_DIR}/Python/$<TARGET_FILE_NAME:${module_name}>"
     )
 endforeach()
-
-############################################################
-# CUDA
-############################################################
 
 if(EULER_BUILD_CUDA)
 
@@ -152,10 +136,6 @@ if(EULER_BUILD_CUDA)
     endif()
 
 endif()
-
-############################################################
-# Status
-############################################################
 
 message(STATUS "")
 message(STATUS "========== EulerEasel ==========")
