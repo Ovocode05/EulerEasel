@@ -3,7 +3,9 @@
 
 #include "./../Strategy/strategy.hpp"
 #include "./../Matrix/extractor.hpp"
+#include "./../../Server/CPU/hybrid_ell-csr.h"
 #include "./../../Server/utils/create_file.h"
+#include "./../../Server/utils/format/ellpack_format.h"
 using namespace std;
 namespace py = pybind11;
 
@@ -28,8 +30,25 @@ PYBIND11_MODULE(EULER_PYBIND_MODULE_NAME, mat)
         .def_readwrite("vals", &CSR::vals)
         .def_readwrite("rptr", &CSR::rptr);
 
+    py::class_<ell>(mat, "ELL")
+        .def(py::init<>())
+        .def_readwrite("numcols", &ell::numcols)
+        .def_readwrite("numrows", &ell::numrows)
+        .def_readwrite("maxpad", &ell::max_padd)
+        .def_readwrite("A", &ell::val)
+        .def_readwrite("J", &ell::col_ind);
+
+    py::class_<hybd>(mat, "HYB")
+        .def(py::init<>())
+        .def_readwrite("csr", &hybd::csr_entries)
+        .def_readwrite("ell", &hybd::ell_entries)
+        .def_readwrite("vec_c", &hybd::csr_part)
+        .def_readwrite("vec_e", &hybd::el_part);
+
     mat.def("file_paser", &file_parser, "Parse a matrix from a file");
     mat.def("csrformat", &Csrformat, "Convert a dense matrix to CSR format");
+    mat.def("ellformat", &ellpack_format, "Convert a dense matrix to ELL format");
+    mat.def("hybd_format", &hybrid_format, "Convert a dense matrix to hybrid format");
     mat.def("mat_dim", &matrix_dim, "Get the dimensions of a matrix from a file");
     mat.def("results", &create_outfile, "results");
 

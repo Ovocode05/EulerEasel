@@ -44,39 +44,15 @@ class linTS:
         model['A'] += x @ x.T
         model['b'] += x * reward
 
+
+
 if __name__ == "__main__":
-    filename= "/home/fakeheadset/Projects/EulerEasel/Data/bcsstk18.mtx"
-    csr = matrix_extractor.CSR()
+    filename= "/home/fakeheadset/Projects/EulerEasel/Data/bcsstk13.mtx"
+    ell = matrix_extractor.ELL()
     mat_vec = matrix_extractor.file_paser(filename)
     [r,c,nnz] = matrix_extractor.mat_dim(filename)
-    
-    matrix_extractor.csrformat(mat_vec, r,c,nnz, csr) 
-    csr_matrix_obj = matrix_extractor.CsrMatrix(csr, c)
-    print(f"3. CsrMatrix instance built. Shape: ({csr_matrix_obj.get_nrow()}, {csr_matrix_obj.get_ncol()})")
-    extractor = matrix_extractor.MatrixExtractor(csr_matrix_obj)
-    vector = extractor.to_flat_vector(extractor.extract_all())
-    print(vector)
-    
-    # #kernels
-    # hrd = matrix_extractor.HardwareContext();
-    # str = matrix_extractor.StrategyRegister()
-    # kernel_vec = matrix_extractor.StrategyRegister.create()
-    # str.generate(kernel_vec, hrd);
-    # final = str.get_strategies(hrd)
-    # final2 = str.get_name(final);
-    # print(len(final2))
-    
-    # #normalize the vector
-    
-    input = np.random.randint(0,1, c)
-    
-    # num_features = 2
-    # first = linTS([0, 1], num_features)
-    # for i in range(2):
-    #     x = np.random.rand(num_features) # (numfeatures,)
-    #     kernel, score = first.choose_kernel([0, 1], x)
-    #     # _, reward = rn.proc_csrx4(csr, input)
-    #     # first.update(kernel, x, reward)
-        
-_, reward = rn.proc_csr(csr, input)
-print(reward, "nansec")
+    [A, J]= matrix_extractor.ellformat(mat_vec, r, c, nnz, ell)     
+    input = np.random.rand(c)
+    [output, reward] = rn.proc_ellx4(input, A, J)
+    print(reward, "nansec")
+    print(len(output))

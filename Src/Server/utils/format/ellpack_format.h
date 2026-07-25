@@ -41,7 +41,6 @@ inline tuple<vector<vector<double>>, vector<vector<int32_t>>> ellpack_format(con
         row_counter[ridx]++;
     }
 
-    cout << "A and J" << endl;
     return {A, J};
 }
 
@@ -72,7 +71,7 @@ inline tuple<vector<double>, double> SpMv_kernel_ell(const vector<double> &x, co
         y[i] = sum;
     }
 
-    return yconst auto end = chrono::steady_clock::now();
+    const auto end = chrono::steady_clock::now();
     double rntime_ns = chrono::duration<double, nano>(end - start).count();
     return {move(y), rntime_ns};
 }
@@ -119,7 +118,7 @@ inline tuple<vector<double>, double> ell_spMV_AVX(const vector<double> &x, const
         _mm256_storeu_pd(four_sum_array, vec_sum);
         double final_sum_array = four_sum_array[0] + four_sum_array[1] + four_sum_array[2] + four_sum_array[3];
 
-        for (; k <= numcols; k++)
+        for (; k < numcols; k++)
             final_sum_array += A[i][k] * x[J[i][k]];
 
         y[i] = final_sum_array;

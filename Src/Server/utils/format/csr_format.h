@@ -32,8 +32,6 @@ inline void Csrformat(const vector<matrix_el> &matrix, int32_t r, int32_t c, int
     {
         csr.rptr[i] += csr.rptr[i - 1];
     }
-
-    cout << "CSR built!" << endl;
 }
 
 inline tuple<vector<double>, double> SpMv_kernel(CSR &csr, const vector<double> &x)
