@@ -1,8 +1,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "./Strategy/strategy.hpp"
-#include "./Matrix/extractor.hpp"
+#include "./../Strategy/strategy.hpp"
+#include "./../Matrix/extractor.hpp"
+#include "./../../Server/utils/create_file.h"
 using namespace std;
 namespace py = pybind11;
 
@@ -30,6 +31,7 @@ PYBIND11_MODULE(EULER_PYBIND_MODULE_NAME, mat)
     mat.def("file_paser", &file_parser, "Parse a matrix from a file");
     mat.def("csrformat", &Csrformat, "Convert a dense matrix to CSR format");
     mat.def("mat_dim", &matrix_dim, "Get the dimensions of a matrix from a file");
+    mat.def("results", &create_outfile, "results");
 
     py::class_<CsrMatrix<double>>(mat, "CsrMatrix")
         .def(py::init<CSR &, int32_t>())

@@ -7,7 +7,7 @@
 #include "./../utils/datatype.h"
 using namespace std;
 
-vector<matrix_el> file_parser(string filename)
+inline vector<matrix_el> file_parser(string filename)
 {
     vector<matrix_el> matrix;
 

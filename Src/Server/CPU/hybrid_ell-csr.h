@@ -61,16 +61,53 @@ tuple<vector<vector<double>>, vector<vector<int>>, CSR> hybrid_format(hybd &hybr
     return {A, J, hybrid.csr_part};
 }
 
-vector<double> SpMv_kernel_hybrid(hybd &hybrid, const vector<double> &x, vector<vector<double>> &A, vector<vector<int32_t>> &J, int32_t r)
+inline tuple<vector<double>, double> SpMv_kernel_hybrid(hybd &hybrid, const vector<double> &x, vector<vector<double>> &A, vector<vector<int32_t>> &J, int32_t r)
 {
-    auto y_csr = SpMV_kernel_AVX(hybrid.csr_part, x);
-    auto y_ell = ell_pack_AVX_vertical(x, A, J);
+    auto y_csr = SpMV_kernel(hybrid.csr_part, x);
+    auto y_ell = SpMv_kernel_ell(x, A, J);
     vector<double> y_new(r, 0);
+    const auto start = chrono::steady_clock::now();
 
     for (int32_t i = 0; i < r; i++)
     {
         y_new[i] = y_csr[i] + y_ell[i];
     }
 
-    return y_new;
+    const auto end = chrono::steady_clock::now();
+    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    return {move(y_new), rntime_ns};
+}
+
+inline tuple<vector<double>, double> SpMv_kernel_hybrid_x4(hybd &hybrid, const vector<double> &x, vector<vector<double>> &A, vector<vector<int32_t>> &J, int32_t r)
+{
+    auto y_csr = SpMV_kernel_AVX(hybrid.csr_part, x);
+    auto y_ell = ell_spMV_AVX(x, A, J);
+    vector<double> y_new(r, 0);
+    const auto start = chrono::steady_clock::now();
+
+    for (int32_t i = 0; i < r; i++)
+    {
+        y_new[i] = y_csr[i] + y_ell[i];
+    }
+
+    const auto end = chrono::steady_clock::now();
+    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    return {move(y_new), rntime_ns};
+}
+
+inline tuple<vector<double>, double> SpMv_kernel_hybrid_16x(hybd &hybrid, const vector<double> &x, vector<vector<double>> &A, vector<vector<int32_t>> &J, int32_t r)
+{
+    auto y_csr = SpMV_kernel_AVX(hybrid.csr_part, x);
+    auto y_ell = ell_pack_AVX_vertical(x, A, J);
+    vector<double> y_new(r, 0);
+    const auto start = chrono::steady_clock::now();
+
+    for (int32_t i = 0; i < r; i++)
+    {
+        y_new[i] = y_csr[i] + y_ell[i];
+    }
+
+    const auto end = chrono::steady_clock::now();
+    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    return {move(y_new), rntime_ns};
 }

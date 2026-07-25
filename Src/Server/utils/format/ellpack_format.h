@@ -11,7 +11,7 @@
 #include <omp.h>
 using namespace std;
 
-tuple<vector<vector<double>>, vector<vector<int32_t>>> ellpack_format(const vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nnz, ell &ellpack)
+inline tuple<vector<vector<double>>, vector<vector<int32_t>>> ellpack_format(const vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nnz, ell &ellpack)
 {
     ellpack.numcols = c;
     ellpack.numrows = r;
@@ -45,7 +45,7 @@ tuple<vector<vector<double>>, vector<vector<int32_t>>> ellpack_format(const vect
     return {A, J};
 }
 
-vector<double> SpMv_kernel_ell(const vector<double> &x, const vector<vector<double>> &A, const vector<vector<int32_t>> &J)
+inline tuple<vector<double>, double> SpMv_kernel_ell(const vector<double> &x, const vector<vector<double>> &A, const vector<vector<int32_t>> &J)
 {
     /*
     SpMV kernel of Ellpack has shown more efficient results for GPU and parallel computations
@@ -54,7 +54,7 @@ vector<double> SpMv_kernel_ell(const vector<double> &x, const vector<vector<doub
     int32_t numrows = A.size();
     int32_t numcols = A[0].size();
     vector<double> y(numrows, 0);
-
+    const auto start = chrono::steady_clock::now();
     for (int32_t i = 0; i < numrows; i++)
     {
         double sum = 0;
@@ -72,10 +72,12 @@ vector<double> SpMv_kernel_ell(const vector<double> &x, const vector<vector<doub
         y[i] = sum;
     }
 
-    return y;
+    return yconst auto end = chrono::steady_clock::now();
+    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    return {move(y), rntime_ns};
 }
 
-vector<double> ell_spMV_AVX(const vector<double> &x, const vector<vector<double>> &A, const vector<vector<int32_t>> &J)
+inline tuple<vector<double>, double> ell_spMV_AVX(const vector<double> &x, const vector<vector<double>> &A, const vector<vector<int32_t>> &J)
 {
     /*
     The AVX intrinsic implemented for the SpMV kernel for csr format
@@ -88,6 +90,7 @@ vector<double> ell_spMV_AVX(const vector<double> &x, const vector<vector<double>
     vector<double> y(numrows, 0);
 
     __m128i vec_minus_one = _mm_set1_epi32(-1);
+    const auto start = chrono::steady_clock::now();
 
 #pragma omp parallel for default(none) shared(numrows, numcols, y, x, A, J, vec_minus_one) schedule(runtime)
     for (int32_t i = 0; i < numrows; i++)
@@ -122,10 +125,12 @@ vector<double> ell_spMV_AVX(const vector<double> &x, const vector<vector<double>
         y[i] = final_sum_array;
     }
 
-    return y;
+    const auto end = chrono::steady_clock::now();
+    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    return {move(y), rntime_ns};
 }
 
-vector<double> ell_pack_AVX_vertical(const vector<double> &x, const vector<vector<double>> &A, const vector<vector<int32_t>> &J)
+inline tuple<vector<double>, double> ell_pack_AVX_vertical(const vector<double> &x, const vector<vector<double>> &A, const vector<vector<int32_t>> &J)
 {
 
     int32_t numrows = A.size();
@@ -146,6 +151,8 @@ vector<double> ell_pack_AVX_vertical(const vector<double> &x, const vector<vecto
             inds.emplace_back(J[j][l]);
         }
     }
+
+    const auto start = chrono::steady_clock::now();
 
 #pragma omp parallel for default(none) shared(numrows, maxpadd, y, x, A, J, vals, inds) schedule(runtime)
     // safe auto privatization for openMP
@@ -227,5 +234,7 @@ vector<double> ell_pack_AVX_vertical(const vector<double> &x, const vector<vecto
         y[i] = sum;
     }
 
-    return y;
+    const auto end = chrono::steady_clock::now();
+    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    return {move(y), rntime_ns};
 }

@@ -5,9 +5,11 @@
 #include <random>
 #include <immintrin.h>
 #include <omp.h>
+#include <chrono>
+#include <cstdint>
 using namespace std;
 
-void Csrformat(const vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nnz, CSR &csr)
+inline void Csrformat(const vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nnz, CSR &csr)
 {
     (void)c;
     /*
@@ -34,13 +36,15 @@ void Csrformat(const vector<matrix_el> &matrix, int32_t r, int32_t c, int32_t nn
     cout << "CSR built!" << endl;
 }
 
-vector<double> SpMv_kernel(CSR &csr, const vector<double> &x)
+inline tuple<vector<double>, double> SpMv_kernel(CSR &csr, const vector<double> &x)
 {
     /*
     SpMv_kernel forms the basic sparse vector multiplication function that
     */
     int32_t total_rows = csr.num_rows;
     vector<double> y(total_rows, 0);
+
+    const auto start = chrono::steady_clock::now();
 
     for (int32_t i = 0; i < total_rows; i++)
     {
@@ -54,10 +58,12 @@ vector<double> SpMv_kernel(CSR &csr, const vector<double> &x)
         y[i] = sum;
     }
 
-    return y;
+    const auto end = chrono::steady_clock::now();
+    const double runtime_ns = chrono::duration<double, nano>(end - start).count();
+    return {move(y), runtime_ns};
 }
 
-vector<double> SpMV_kernel_AVX(CSR &csr, const vector<double> &x)
+inline tuple<vector<double>, double> SpMV_kernel_AVX(CSR &csr, const vector<double> &x)
 {
     /*
     The AVX intrinsic implemented for the SpMV kernel for csr format
@@ -70,6 +76,8 @@ vector<double> SpMV_kernel_AVX(CSR &csr, const vector<double> &x)
     gather x.data scattered in memory - 4 blocks from RAM
     fuse addition
     */
+
+    const auto start = chrono::steady_clock::now();
 
     int32_t num_rows = csr.num_rows;
     vector<double> y(num_rows, 0);
@@ -102,6 +110,7 @@ vector<double> SpMV_kernel_AVX(CSR &csr, const vector<double> &x)
 
         y[i] = final_sum_array;
     }
-
-    return y;
+    const auto end = chrono::steady_clock::now();
+    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    return {move(y), rntime_ns};
 }

@@ -1,12 +1,9 @@
 import numpy as np
 import sys
 import os
-import numpy as np
-
-# Inject the build artifact path so Python can find your .so files
 sys.path.append("/home/fakeheadset/Projects/EulerEasel/Src/include")
 import matrix_extractor
-
+import runtime as rn
 
 '''
 #343fff
@@ -60,24 +57,26 @@ if __name__ == "__main__":
     vector = extractor.to_flat_vector(extractor.extract_all())
     print(vector)
     
-    #kernels
-    hrd = matrix_extractor.HardwareContext();
-    str = matrix_extractor.StrategyRegister()
-    kernel_vec = matrix_extractor.StrategyRegister.create()
-    str.generate(kernel_vec, hrd);
-    final = str.get_strategies(hrd)
-    final2 = str.get_name(final);
-    print(len(final2))
+    # #kernels
+    # hrd = matrix_extractor.HardwareContext();
+    # str = matrix_extractor.StrategyRegister()
+    # kernel_vec = matrix_extractor.StrategyRegister.create()
+    # str.generate(kernel_vec, hrd);
+    # final = str.get_strategies(hrd)
+    # final2 = str.get_name(final);
+    # print(len(final2))
     
-    #normalize the vector
+    # #normalize the vector
     
+    input = np.random.randint(0,1, c)
     
-    
-    num_features = 2
-    first = linTS([0, 1], num_features)
-    for i in range(10):
-        x = np.random.rand(num_features) # (numfeatures,)
-        kernel, score = first.choose_kernel([0, 1], x)
-        reward = np.random.rand()
-        first.update(kernel, x, reward)
+    # num_features = 2
+    # first = linTS([0, 1], num_features)
+    # for i in range(2):
+    #     x = np.random.rand(num_features) # (numfeatures,)
+    #     kernel, score = first.choose_kernel([0, 1], x)
+    #     # _, reward = rn.proc_csrx4(csr, input)
+    #     # first.update(kernel, x, reward)
         
+_, reward = rn.proc_csr(csr, input)
+print(reward, "nansec")

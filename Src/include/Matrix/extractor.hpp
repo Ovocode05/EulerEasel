@@ -16,7 +16,7 @@ class MatrixExtractor
 private:
     CsrMatrix<T> &csrmat_;
     template <typename Op>
-    double process_rows(int32_t nrows, const vector<int32_t> &rptr, Op op)
+    inline double process_rows(int32_t nrows, const vector<int32_t> &rptr, Op op)
     {
         double sum = 0.0;
         for (int i = 0; i < nrows; i++)
@@ -166,7 +166,7 @@ public:
             twf};
     }
 
-    MatrixFeatures extract_all()
+    inline MatrixFeatures extract_all()
     {
         ScaleFeatures s = extract_scale();
         RowDistributionFeatures r = extract_rowdist();
@@ -178,7 +178,7 @@ public:
             s, r, e, l, h};
     }
 
-    vector<int> to_flat_vector(MatrixFeatures mat)
+    inline vector<int> to_flat_vector(MatrixFeatures mat)
     {
         vector<int> flat_vector;
         flat_vector.push_back(mat.scale.rows);

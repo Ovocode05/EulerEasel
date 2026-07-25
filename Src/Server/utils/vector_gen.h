@@ -7,7 +7,7 @@
 class Central_Vector
 {
 public:
-    static vector<double> generate(int32_t r, int32_t c, int32_t nnz)
+    inline static vector<double> generate(int32_t r, int32_t c, int32_t nnz)
     {
         (void)r;
         (void)nnz;

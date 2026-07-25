@@ -7,7 +7,7 @@
 #include <string>
 using namespace std;
 
-tuple<int32_t, int32_t, int32_t> matrix_dim(string filename)
+inline tuple<int32_t, int32_t, int32_t> matrix_dim(string filename)
 {
     ifstream file(filename);
     if (!file.is_open())

@@ -13,7 +13,7 @@ using namespace std;
 class Hardware_filter
 {
 public:
-    void apply(
+    inline void apply(
         vector<strategy> &strategies,
         const HardwareContext &hardware)
     {
@@ -40,7 +40,7 @@ public:
 class StrategyRegister
 {
 public:
-    static vector<strategy> create()
+    inline static vector<strategy> create()
     {
         return {
             {Device::CPU, Format::CSR, Architecture::Proc, Kernel::CPU_CSR},
@@ -56,14 +56,15 @@ public:
             {Device::GPU, Format::HYB, Architecture::CUDA, Kernel::GPU_HYB}};
     }
 
-    void generate(
+    inline void generate(
         vector<strategy> &str,
         const HardwareContext &hardware)
     {
         auto strategies = StrategyRegister::create();
         Hardware_filter().apply(str, hardware);
     }
-    vector<strategy> get_strategies(HardwareContext &hrd)
+
+    inline vector<strategy> get_strategies(HardwareContext &hrd)
     {
         query_hardware_context(hrd);
         checkAVX_support(hrd);
@@ -76,7 +77,7 @@ public:
         return stat_vec;
     }
 
-    vector<string> get_strategy_names(vector<strategy> &strategies)
+    inline vector<string> get_strategy_names(vector<strategy> &strategies)
     {
         vector<string> names;
         for (const auto &s : strategies)
