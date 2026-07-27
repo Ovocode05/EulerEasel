@@ -1,5 +1,6 @@
 #include <iostream>
-#include <cudaruntime.h>
+#include <cuda_runtime.h>
+#include "./err.hpp"
 using namespace std;
 template <typename T>
 
@@ -12,12 +13,13 @@ private:
 public:
     cudaRegister(
         size_t size,
-        void *ptr) : size_(size), ptr_(ptr)
+        uintptr_t ptr) : size_(size), ptr_(reinterpret_cast<void *>(ptr))
     {
-        CUDA_CHECK(cudaHostRegister(
+        cudaHostRegister(
             ptr_,
             size_,
-            cudaHostRegisterDefault));
+            cudaHostRegisterDefault);
+        CUDA_CHECK();
     }
 
     ~cudaRegister()

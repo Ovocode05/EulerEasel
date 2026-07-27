@@ -1,5 +1,6 @@
 #include <iostream>
-#include <cudaruntime.h>
+#include <cuda_runtime.h>
+#include "./err.hpp"
 using namespace std;
 
 class CudaStream
@@ -15,8 +16,8 @@ public:
                 ? cudaStreamNonBlocking
                 : cudaStreamDefault;
 
-        CUDA_CHECK(
-            cudaStreamCreateWithFlags(&stream_, flags));
+        cudaStreamCreateWithFlags(&stream_, flags);
+        CUDA_CHECK();
     }
 
     ~CudaStream()

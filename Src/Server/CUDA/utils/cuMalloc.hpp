@@ -1,8 +1,9 @@
 #include <iostream>
-#include <cudaruntime.h>
+#include <cuda_runtime.h>
 #include <vector>
-template <typename T>
+#include "./err.hpp"
 using namespace std;
+template <typename T>
 
 /*
 explains what is in this file
@@ -19,7 +20,8 @@ public:
 
     explicit deviceBuffer(size_t size) : size_(size)
     {
-        CUDA_CHECK(cudaMalloc(&ptr_, size_ * sizeof(T)));
+        cudaMalloc(&ptr_, size_ * sizeof(T));
+        CUDA_CHECK();
     }
 
     ~deviceBuffer()
@@ -48,7 +50,8 @@ public:
         size_t count,
         cudaStream_t stream = 0)
     {
-        CUDA_CHECK(cudaMemcpyAsync(host, ptr_, sizeof(T) * count, cudaMemcpyHostToDevice, stream));
+        cudaMemcpyAsync(ptr_, host, sizeof(T) * count, cudaMemcpyHostToDevice, stream);
+        CUDA_CHECK();
     }
 
     void device_to_host(
@@ -56,7 +59,8 @@ public:
         size_t count,
         cudaStream_t stream = 0) const
     {
-        CUDA_CHECK(cudaMemcpyAsync(host, ptr_, sizeof(T) * count, cudaMemcpyDeviceToHost, stream));
+        cudaMemcpyAsync(host, ptr_, sizeof(T) * count, cudaMemcpyDeviceToHost, stream);
+        CUDA_CHECK();
     }
 
     deviceBuffer(const deviceBuffer &) = delete;

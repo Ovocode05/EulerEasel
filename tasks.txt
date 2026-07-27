@@ -1,7 +1,3 @@
-testing and verifying every host kernels (csr, ellpack, hybrid)
-git push
-adding device kernels
-build and testing 
 git push
 linTS implementation and logic complete
 testing 
