@@ -1,38 +1,51 @@
 import sys
 import os
 import numpy as np
+import matrix_extractor
+import runtime as rn
+import CUDAruntime as crn
 
-TESTING_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(TESTING_DIR)
-BUILD_DIR = os.path.join(PROJECT_ROOT, "build")
-sys.path.append(BUILD_DIR)
+sys.path.append("/home/fakeheadset/Projects/EulerEasel/Src/include")
 
-try:
-    import eulereasel as ee
-    print("Success: module imported perfectly!")
-except ImportError as e:
-    print(f'Error: ', e)
-    sys.exit(1)
+filename= "/home/fakeheadset/Projects/EulerEasel/Data/bcsstk13.mtx"
+ell= matrix_extractor.ELL()
+mat_vec = matrix_extractor.file_paser(filename)
+[r,c,nnz] = matrix_extractor.mat_dim(filename)
+[A, J] = matrix_extractor.ellformat(mat_vec, r, c, nnz,ell)    
+input = np.random.rand(c)
+A_np = np.asarray(A, dtype=np.float64)
+J_np = np.asarray(J, dtype=np.int32)
+# d_vals = crn.deviceBufferDouble(len(csr.vals))
+# d_rptr = crn.deviceBufferInt(len(csr.rptr))
+# d_ind = crn.deviceBufferInt(len(csr.ind))
 
-mat_vec = ee.datatype.mat_vec()
-# csr = ee.datatype.CSR()
-ell = ee.datatype.ELL()
+# d_rptr.h2d(np.asarray(csr.rptr, dtype=np.int32))
+# d_ind.h2d(np.asarray(csr.ind, dtype=np.int32))
+# d_vals.h2d(np.asarray(csr.vals, dtype=np.float64))   
+row, col = A_np.shape
+[a, j] = crn.flatten(J_np, A_np)
+d_a = crn.deviceBufferDouble(len(a))
+d_j = crn.deviceBufferInt(len(j))
+d_a.h2d(np.asarray(a, dtype=np.float64))
+d_j.h2d(np.asarray(j, dtype=np.int32))
+# csr_rows = len(csr.rptr) -1
+d_x = crn.deviceBufferDouble(c)
+d_y = crn.deviceBufferDouble(r)
+d_x.h2d(input)
+d_y.h2d(np.zeros(r, dtype=np.float64))
+threads = 256
+blocks = (r + threads -1)//threads
+# stream1 = crn.cudaStream(True)
+# stream2 = crn.cudaStream(True)
+kernel_runtime = crn.cuda_ell(
+    threads,
+    blocks,
+    d_a, d_j,
+    row, col,
+    d_x,
+    d_y, 
+)    
 
-filename = "/home/fakeheadset/Projects/EulerEasel/Data/bcsstk18.mtx"
-
-ee.functions.file_parser(filename, mat_vec)
-[r, c, nnz] = ee.functions.matdim(filename)
-
-[A, J] = ee.functions.ell.ellformat(mat_vec, r, c, nnz, ell)
-
-x = ee.functions.CentralVector.generate(r, c, nnz)
-
-y = ee.functions.ell.sparseAVX_x16(x, A, J)
-
-results_path = os.path.join(PROJECT_ROOT, "Src/Server/CPU/results/ell_py_avx.txt")
-os.makedirs(os.path.dirname(results_path), exist_ok=True)
-
-with open(results_path, "w", encoding="utf-8") as file:
-    file.write("\n".join(map(str, y)))
-
-print("Results written successfully.")
+y_gpu = d_y.d2h()
+print(len(y_gpu))
+print(kernel_runtime)

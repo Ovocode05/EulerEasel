@@ -63,8 +63,8 @@ tuple<vector<vector<double>>, vector<vector<int>>, CSR> hybrid_format(hybd &hybr
 
 inline tuple<vector<double>, double> SpMv_kernel_hybrid(hybd &hybrid, const vector<double> &x, vector<vector<double>> &A, vector<vector<int32_t>> &J, int32_t r)
 {
-    auto [y_csr, nano1] = SpMv_kernel(hybrid.csr_part, x);
-    auto [y_ell, nano2] = SpMv_kernel_ell(x, A, J);
+    auto [y_csr, milli1] = SpMv_kernel(hybrid.csr_part, x);
+    auto [y_ell, milli2] = SpMv_kernel_ell(x, A, J);
     vector<double> y_new(r, 0);
     const auto start = chrono::steady_clock::now();
 
@@ -74,14 +74,14 @@ inline tuple<vector<double>, double> SpMv_kernel_hybrid(hybd &hybrid, const vect
     }
 
     const auto end = chrono::steady_clock::now();
-    double rntime_ns = chrono::duration<double, nano>(end - start).count();
-    return {move(y_new), rntime_ns + nano1 + nano2};
+    double rntime_ns = chrono::duration<double, milli>(end - start).count();
+    return {move(y_new), rntime_ns + milli1 + milli2};
 }
 
 inline tuple<vector<double>, double> SpMv_kernel_hybrid_x4(hybd &hybrid, const vector<double> &x, vector<vector<double>> &A, vector<vector<int32_t>> &J, int32_t r)
 {
-    auto [y_csr, nano1] = SpMV_kernel_AVX(hybrid.csr_part, x);
-    auto [y_ell, nano2] = ell_spMV_AVX(x, A, J);
+    auto [y_csr, milli1] = SpMV_kernel_AVX(hybrid.csr_part, x);
+    auto [y_ell, milli2] = ell_spMV_AVX(x, A, J);
     vector<double> y_new(r, 0);
     const auto start = chrono::steady_clock::now();
 
@@ -91,14 +91,14 @@ inline tuple<vector<double>, double> SpMv_kernel_hybrid_x4(hybd &hybrid, const v
     }
 
     const auto end = chrono::steady_clock::now();
-    double rntime_ns = chrono::duration<double, nano>(end - start).count();
-    return {move(y_new), rntime_ns + nano1 + nano2};
+    double rntime_ns = chrono::duration<double, milli>(end - start).count();
+    return {move(y_new), rntime_ns + milli1 + milli2};
 }
 
 inline tuple<vector<double>, double> SpMv_kernel_hybrid_16x(hybd &hybrid, const vector<double> &x, vector<vector<double>> &A, vector<vector<int32_t>> &J, int32_t r)
 {
-    auto [y_csr, nano1] = SpMV_kernel_AVX(hybrid.csr_part, x);
-    auto [y_ell, nano2] = ell_pack_AVX_vertical(x, A, J);
+    auto [y_csr, milli1] = SpMV_kernel_AVX(hybrid.csr_part, x);
+    auto [y_ell, milli2] = ell_pack_AVX_vertical(x, A, J);
     vector<double> y_new(r, 0);
     const auto start = chrono::steady_clock::now();
 
@@ -108,6 +108,6 @@ inline tuple<vector<double>, double> SpMv_kernel_hybrid_16x(hybd &hybrid, const 
     }
 
     const auto end = chrono::steady_clock::now();
-    double rntime_ns = chrono::duration<double, nano>(end - start).count();
-    return {move(y_new), rntime_ns + nano1 + nano2};
+    double rntime_ns = chrono::duration<double, milli>(end - start).count();
+    return {move(y_new), rntime_ns + milli1 + milli2};
 }

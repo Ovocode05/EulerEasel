@@ -57,7 +57,7 @@ inline tuple<vector<double>, double> SpMv_kernel(CSR &csr, const vector<double> 
     }
 
     const auto end = chrono::steady_clock::now();
-    const double runtime_ns = chrono::duration<double, nano>(end - start).count();
+    const double runtime_ns = chrono::duration<double, milli>(end - start).count();
     return {move(y), runtime_ns};
 }
 
@@ -109,6 +109,6 @@ inline tuple<vector<double>, double> SpMV_kernel_AVX(CSR &csr, const vector<doub
         y[i] = final_sum_array;
     }
     const auto end = chrono::steady_clock::now();
-    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    double rntime_ns = chrono::duration<double, milli>(end - start).count();
     return {move(y), rntime_ns};
 }

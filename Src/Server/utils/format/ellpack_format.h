@@ -72,7 +72,7 @@ inline tuple<vector<double>, double> SpMv_kernel_ell(const vector<double> &x, co
     }
 
     const auto end = chrono::steady_clock::now();
-    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    double rntime_ns = chrono::duration<double, milli>(end - start).count();
     return {move(y), rntime_ns};
 }
 
@@ -125,7 +125,7 @@ inline tuple<vector<double>, double> ell_spMV_AVX(const vector<double> &x, const
     }
 
     const auto end = chrono::steady_clock::now();
-    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    double rntime_ns = chrono::duration<double, milli>(end - start).count();
     return {move(y), rntime_ns};
 }
 
@@ -234,6 +234,6 @@ inline tuple<vector<double>, double> ell_pack_AVX_vertical(const vector<double> 
     }
 
     const auto end = chrono::steady_clock::now();
-    double rntime_ns = chrono::duration<double, nano>(end - start).count();
+    double rntime_ns = chrono::duration<double, milli>(end - start).count();
     return {move(y), rntime_ns};
 }

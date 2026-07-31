@@ -88,6 +88,11 @@ PYBIND11_MODULE(EULER_PYBIND_MODULE_NAME, mat)
         .def_readwrite("h2d_bandwidth_gbs", &HardwareContext::h2d_bandwidth_gbs)
         .def_readwrite("d2h_bandwidth_gbs", &HardwareContext::d2h_bandwidth_gbs);
 
+    mat.def("checkavxsupport", &checkAVX_support, "");
+    mat.def("check_openmp", &check_openmp_support, "");
+    mat.def("query_hardware_context", &query_hardware_context, "");
+    mat.def("print_hardware_context", &print_hardware_context, "");
+
     py::class_<strategy>(mat, "strategy")
         .def(py::init<>())
         .def_readwrite("device", &strategy::device)
@@ -95,4 +100,38 @@ PYBIND11_MODULE(EULER_PYBIND_MODULE_NAME, mat)
         .def_readwrite("arch", &strategy::arch)
         .def_readwrite("kernel", &strategy::kernel)
         .def_readwrite("is_available", &strategy::is_available);
+
+    py::enum_<Device>(mat, "Device")
+        .value("CPU", Device::CPU)
+        .value("GPU", Device::GPU)
+        .def("__str__", [](Device k)
+             { return py::str(py::cast(k)).attr("name"); });
+
+    py::enum_<Format>(mat, "Format")
+        .value("CSR", Format::CSR)
+        .value("ELL", Format::ELL)
+        .value("HYB", Format::HYB)
+        .def("__str__", [](Format k)
+             { return py::str(py::cast(k)).attr("name"); });
+
+    py::enum_<Architecture>(mat, "Architecture")
+        .value("Proc", Architecture::Proc)
+        .value("AVX", Architecture::AVX)
+        .value("CUDA", Architecture::CUDA)
+        .def("__str__", [](Architecture k)
+             { return py::str(py::cast(k)).attr("name"); });
+
+    py::enum_<Kernel>(mat, "Kernel")
+        .value("CPU_CSR", Kernel::CPU_CSR)
+        .value("CPU_ELL", Kernel::CPU_ELL)
+        .value("CPU_HYB", Kernel::CPU_HYB)
+        .value("CPU_CSR_AVX", Kernel::CPU_CSR_AVX)
+        .value("CPU_ELL_AVX_x4", Kernel::CPU_ELL_AVX_x4)
+        .value("CPU_ELL_AVX_x16", Kernel::CPU_ELL_AVX_x16)
+        .value("CPU_HYB_AVX", Kernel::CPU_HYB_AVX)
+        .value("GPU_CSR", Kernel::GPU_CSR)
+        .value("GPU_ELL", Kernel::GPU_ELL)
+        .value("GPU_HYB", Kernel::GPU_HYB)
+        .def("__str__", [](Kernel k)
+             { return py::str(py::cast(k)).attr("name"); });
 }

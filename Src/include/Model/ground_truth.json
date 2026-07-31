@@ -1,0 +1,38 @@
+[
+    {
+        "oracle_0": {
+            "runtime": 0.05041706624130408,
+            "kernel": "GPU_ELL"
+        }
+    },
+    {
+        "oracle_1": {
+            "runtime": 0.042504533752799036,
+            "kernel": "GPU_CSR"
+        }
+    },
+    {
+        "oracle_2": {
+            "runtime": 0.003939200014186402,
+            "kernel": "GPU_ELL"
+        }
+    },
+    {
+        "oracle_3": {
+            "runtime": 0.0037007,
+            "kernel": "CPU_CSR"
+        }
+    },
+    {
+        "oracle_4": {
+            "runtime": 0.018679466750472783,
+            "kernel": "GPU_CSR"
+        }
+    },
+    {
+        "oracle_5": {
+            "runtime": 0.0197504001048704,
+            "kernel": "GPU_CSR"
+        }
+    }
+]

@@ -176,6 +176,14 @@ set_target_properties(runtime PROPERTIES
 if(EULER_BUILD_CUDA)
 
     find_package(CUDAToolkit REQUIRED)
+      # Hardware detection inside matrix_extractor uses CUDA Runtime API
+    target_compile_definitions(matrix_extractor PRIVATE
+        HAS_CUDA=1
+    )
+
+    target_link_libraries(matrix_extractor PRIVATE
+        CUDA::cudart
+    )
 
     pybind11_add_module(CUDAruntime
         Src/include/bindings/cudabindings.cpp

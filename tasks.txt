@@ -1,9 +1,4 @@
+testing
 git push
-linTS implementation and logic complete
-testing 
-git push
-optimizing parameters for the selected kernel 
-git push
-final testing
-
-future possibilities
+refinement 
+code refactor
