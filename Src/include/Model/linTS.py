@@ -95,19 +95,25 @@ class LinTS:
         save_dict= {}
         for kernel_enum, matrices in self.models.items():
             kernel_name = kernel_enum.name
-            save_dict[f'model_{kernel_name}_A'] = matrices['A']
-            save_dict[f'model_{kernel_name}_b'] = matrices['b']
+            save_dict[f'model__{kernel_name}__A'] = matrices['A']
+            save_dict[f'model__{kernel_name}__b'] = matrices['b']
             
         np.savez_compressed(filepath, **save_dict)
         print(f" Successfully saved models to {filepath}")
         
-    def load(self, filepath:str, enum_class):
+    def load(self, filepath: str, enum_class):
         self.models = {}
         with np.load(filepath) as data:
             for keys in data.files:
-                if keys.startWith("model_"):
-                    _, kernel, matrix = keys.split("_")
-                    kernel_enum = enum_class[kernel]
+                print(f"NPZ File Key found: '{keys}'") 
+                if keys.startswith("model_"):
+                    parts = keys.split("__")
+                    kernel = parts[1]
+                    matrix = parts[2]
+                    print("Valid enum keys:", dir(enum_class))
+
+                    # FIX: Use getattr() instead of square brackets for C++ Pybind11 Enums
+                    kernel_enum = getattr(enum_class, kernel)
                     if kernel_enum not in self.models:
                         self.models[kernel_enum] = {}
                     

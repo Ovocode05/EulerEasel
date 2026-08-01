@@ -234,11 +234,6 @@ if(EULER_BUILD_CUDA)
 
 endif()
 
-
-# ============================================================
-# Copy Python modules
-# ============================================================
-
 foreach(module matrix_extractor runtime)
     add_custom_command(TARGET ${module} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E
