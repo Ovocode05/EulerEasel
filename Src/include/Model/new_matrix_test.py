@@ -28,7 +28,7 @@ if __name__ == "__main__":
     else:
         print(f" [Notice] No existing weight file found at {model_weights_path}. Running with cold-start identity matrices.")
 
-    filename = '/home/fakeheadset/Projects/EulerEasel/Data/datasetnaked/uni_chimera_i5.mtx'
+    filename = '/home/fakeheadset/Projects/EulerEasel/Data/datasetnaked/ss1.mtx'
     [r, c, nnz] = me.mat_dim(filename)
     frozen_context = LazyFrozenContext(filename, r, c, nnz)
     
@@ -38,7 +38,6 @@ if __name__ == "__main__":
     
     best_kernel_enum, score = lnts.choose_kernel(kernels, new_data)
     print(f" LinTS selected kernel: {best_kernel_enum.name} (Estimated Score: {score:.4f})")
-    
     res = launch_spmv(best_kernel_enum, frozen_context)
     if isinstance(res, (tuple, list)):
         y, runtime = res

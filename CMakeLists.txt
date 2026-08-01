@@ -2,17 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 option(EULER_BUILD_CUDA "Build with CUDA support" OFF)
 
-# ============================================================
-# CUDA toolchain discovery
-#
-# Must happen BEFORE enable_language(CUDA).
-# ============================================================
-
 if(EULER_BUILD_CUDA)
-
-    # --------------------------------------------------------
-    # 1. Find NVCC
-    # --------------------------------------------------------
 
     find_program(
         EULER_NVCC
@@ -30,11 +20,6 @@ if(EULER_BUILD_CUDA)
         )
     endif()
 
-
-    # --------------------------------------------------------
-    # 2. Find an NVCC-compatible host compiler
-    # --------------------------------------------------------
-
     find_program(
         EULER_CUDA_HOST_COMPILER
         NAMES
@@ -49,11 +34,6 @@ if(EULER_BUILD_CUDA)
             "G++ host compiler was found."
         )
     endif()
-
-
-    # --------------------------------------------------------
-    # 3. Tell CMake exactly which compilers CUDA must use
-    # --------------------------------------------------------
 
     set(
         CMAKE_CUDA_COMPILER
@@ -73,11 +53,6 @@ if(EULER_BUILD_CUDA)
 
 endif()
 
-
-# ============================================================
-# Project
-# ============================================================
-
 project(EulerEasel LANGUAGES CXX)
 
 if(EULER_BUILD_CUDA)
@@ -96,10 +71,6 @@ find_package(OpenMP REQUIRED)
 set(PYBIND11_FINDPYTHON ON)
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 find_package(pybind11 CONFIG REQUIRED)
-
-# ============================================================
-# Common
-# ============================================================
 
 add_library(euler_common INTERFACE)
 
@@ -126,11 +97,6 @@ target_link_libraries(euler_core INTERFACE
     OpenMP::OpenMP_CXX
 )
 
-
-# ============================================================
-# Matrix extractor
-# ============================================================
-
 pybind11_add_module(matrix_extractor
     Src/include/bindings/bindings.cpp
 )
@@ -147,11 +113,6 @@ set_target_properties(matrix_extractor PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Src/include
 )
 
-
-# ============================================================
-# CPU runtime
-# ============================================================
-
 pybind11_add_module(runtime
     Src/include/bindings/runtimebind.cpp
 )
@@ -167,11 +128,6 @@ target_include_directories(runtime PRIVATE
 set_target_properties(runtime PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Src/include
 )
-
-
-# ============================================================
-# CUDA runtime
-# ============================================================
 
 if(EULER_BUILD_CUDA)
 

@@ -12,7 +12,6 @@ import runtime as rn
 from context import LazyFrozenContext
 from registry import launch_spmv
 
-print(me)
 '''
 #343fff
 this is the implementation of the linear Thompson sampling algorithm for contextual bandits
@@ -49,15 +48,19 @@ class LinTS:
             model = self.models[k]
             # Fast, numerically stable way to compute theta
             theta = np.linalg.solve(model['A'], model['b']).flatten()
-            
-            # Efficient sampling using Cholesky decomposition instead of full inverse
-            try:
-                L = np.linalg.cholesky(np.linalg.inv(model['A']))
-                theta_sample = theta + L @ np.random.standard_normal(len(theta))
-            except np.linalg.LinAlgError:
-                # Fallback if matrix is temporarily not positive-definite
-                theta_sample = np.random.multivariate_normal(theta, np.linalg.inv(model['A']))
-                
+
+            # Cholesky factor of A (A = L L^T)
+            L = np.linalg.cholesky(model['A'])
+
+            # Sample z ~ N(0, I)
+            z = np.random.standard_normal(len(theta))
+
+            # noise ~ N(0, A^{-1})
+            noise = np.linalg.solve(L.T, z)
+
+            # Thompson sample
+            theta_sample = theta + noise
+
             scores[k] = np.dot(x, theta_sample)
             
         # Return the actual C++ Enum object of the winner
@@ -109,7 +112,6 @@ class LinTS:
                     parts = keys.split("__")
                     kernel = parts[1]
                     matrix = parts[2]
-                    print("Valid enum keys:", dir(enum_class))
 
                     # FIX: Use getattr() instead of square brackets for C++ Pybind11 Enums
                     kernel_enum = getattr(enum_class, kernel)
@@ -119,9 +121,86 @@ class LinTS:
                     self.models[kernel_enum][matrix] = data[keys]
                     
         print(f" Successfully loaded models from {filepath}")
+        
+    
+def generate_ground_truth_oracle():
+        folder_path = Path("/home/fakeheadset/Projects/EulerEasel/Data/datasetnaked/")
+        items = sorted([str(item) for item in folder_path.iterdir() if item.suffix == '.mtx']) 
+        
+        # 1. Discover all available C++ kernels from your strategy register
+        str_reg = me.StrategyRegister()
+        hrd = me.HardwareContext()
+        strategies = str_reg.get_strategies(hrd)
+        kernels = [s.kernel for s in strategies]
+        
+        oracle_records = []
+        NUM_RUNS = 30
+        
+        print(f"Starting brute-force profiling across {len(items)} matrices and {len(kernels)} kernels...")
+        
+        # 2. Iterate through each sparse matrix
+        for idx, filename in enumerate(items):
+            matrix_name = os.path.basename(filename)
+            print(f"\n[{idx + 1}/{len(items)}] Profiling matrix: {matrix_name}")
+            
+            # Build matrix context
+            [r, c, nnz] = me.mat_dim(filename)
+            frozen_context = LazyFrozenContext(filename, r, c, nnz)
+            
+            kernel_perf = {}
+            
+            # 3. Benchmark every single kernel on this specific matrix
+            for k in kernels:
+                runtimes = []
+                
+                # Warm-up run to eliminate GPU kernel compilation/allocation latency
+                try:
+                    launch_spmv(k, frozen_context)
+                except Exception:
+                    continue # Skip kernel if it fails or is incompatible with this matrix shape
+                    
+                # Run 30 timed iterations
+                for _ in range(NUM_RUNS):
+                    res = launch_spmv(k, frozen_context)
+                    runtime = res[1] if isinstance(res, (tuple, list)) else res
+                    runtimes.append(float(runtime))
+                    
+                if runtimes:
+                    # Use median to strip out operating system background jitter noise
+                    kernel_perf[k.name] = np.median(runtimes)
+            
+            if not kernel_perf:
+                print(f"  Warning: No kernels successfully executed for {matrix_name}")
+                continue
+                
+            # 4. Find the global best performing (fastest / minimum runtime) variant
+            best_kernel_name = min(kernel_perf, key=kernel_perf.get)
+            best_runtime = kernel_perf[best_kernel_name]
+            
+            print(f"  -> Winner: {best_kernel_name} | Median Runtime: {best_runtime:.4f} ms")
+            
+            # 5. Format structure to match the layout your main script expects
+            matrix_entry = {
+                matrix_name: {
+                    "best_kernel": best_kernel_name,
+                    "runtime": best_runtime,
+                    "all_kernel_profiles": kernel_perf
+                }
+            }
+            oracle_records.append(matrix_entry)
+            
+        # 6. Save records directly to JSON output
+        output_path = 'ground_truth.json'
+        with open(output_path, 'w') as f:
+            json.dump(oracle_records, f, indent=4)
+            
+        print(f"\n Successfully generated and saved oracle file to: {os.path.abspath(output_path)}")
+
+
 
 
 if __name__ == "__main__":
+    # generate_ground_truth_oracle()
     folder_path = Path("/home/fakeheadset/Projects/EulerEasel/Data/datasetnaked/")
     items = [str(item) for item in folder_path.iterdir()] 
     str_reg = me.StrategyRegister()
@@ -150,7 +229,7 @@ if __name__ == "__main__":
         for i, item in enumerate(runtime_oracle):
             inner_dict = next(iter(item.values()))
             ground_truth_runtime = inner_dict['runtime']
-            reward = runtime / ground_truth_runtime
+            reward = ground_truth_runtime/runtime
         lnts.update(best_kernel_enum, new_data, reward)
         
 

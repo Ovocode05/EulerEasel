@@ -1,38 +1,767 @@
 [
     {
-        "oracle_0": {
-            "runtime": 0.05041706624130408,
-            "kernel": "GPU_ELL"
+        "af23560.mtx": {
+            "best_kernel": "GPU_ELL",
+            "runtime": 0.03891199827194214,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.18250349999999999,
+                "CPU_ELL": 0.314855,
+                "CPU_CSR_AVX": 0.604797,
+                "CPU_ELL_AVX_x4": 0.69345,
+                "CPU_ELL_AVX_x16": 0.3076265,
+                "GPU_CSR": 0.07680000364780426,
+                "GPU_ELL": 0.03891199827194214
+            }
         }
     },
     {
-        "oracle_1": {
-            "runtime": 0.042504533752799036,
-            "kernel": "GPU_CSR"
+        "bcsstk13.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.011264000087976456,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.024033,
+                "CPU_ELL": 0.0344465,
+                "CPU_CSR_AVX": 0.06086,
+                "CPU_ELL_AVX_x4": 0.239095,
+                "CPU_ELL_AVX_x16": 0.2316245,
+                "GPU_CSR": 0.011264000087976456,
+                "GPU_ELL": 0.013311999849975109
+            }
         }
     },
     {
-        "oracle_2": {
-            "runtime": 0.003939200014186402,
-            "kernel": "GPU_ELL"
+        "bcsstk17.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.03267199918627739,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.0925065,
+                "CPU_ELL": 0.541741,
+                "CPU_CSR_AVX": 0.311834,
+                "CPU_ELL_AVX_x4": 0.674398,
+                "CPU_ELL_AVX_x16": 0.5196115,
+                "GPU_CSR": 0.03267199918627739,
+                "GPU_ELL": 0.04689599946141243
+            }
         }
     },
     {
-        "oracle_3": {
-            "runtime": 0.0037007,
-            "kernel": "CPU_CSR"
+        "bcsstk18.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.01228800043463707,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.1046265,
+                "CPU_ELL": 0.27773749999999997,
+                "CPU_CSR_AVX": 0.3481205,
+                "CPU_ELL_AVX_x4": 0.4515955,
+                "CPU_ELL_AVX_x16": 0.2396635,
+                "GPU_CSR": 0.01228800043463707,
+                "GPU_ELL": 0.022431999444961548
+            }
         }
     },
     {
-        "oracle_4": {
-            "runtime": 0.018679466750472783,
-            "kernel": "GPU_CSR"
+        "bcsstm25.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.004095999989658594,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.012778999999999999,
+                "CPU_ELL": 0.029623,
+                "CPU_CSR_AVX": 0.3780325,
+                "CPU_ELL_AVX_x4": 0.2324135,
+                "CPU_ELL_AVX_x16": 0.23901499999999998,
+                "GPU_CSR": 0.004095999989658594,
+                "GPU_ELL": 0.004095999989658594
+            }
         }
     },
     {
-        "oracle_5": {
-            "runtime": 0.0197504001048704,
-            "kernel": "GPU_CSR"
+        "bwm2000.mtx": {
+            "best_kernel": "CPU_CSR",
+            "runtime": 0.0037065,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.0037065,
+                "CPU_ELL": 0.0046785,
+                "CPU_CSR_AVX": 0.059678999999999996,
+                "CPU_ELL_AVX_x4": 0.233239,
+                "CPU_ELL_AVX_x16": 0.259215,
+                "GPU_CSR": 0.004095999989658594,
+                "GPU_ELL": 0.004095999989658594
+            }
+        }
+    },
+    {
+        "dataset22mfeatzernike_10NN.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.0071680000983178616,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.008909,
+                "CPU_ELL": 0.0140455,
+                "CPU_CSR_AVX": 0.059938,
+                "CPU_ELL_AVX_x4": 0.208833,
+                "CPU_ELL_AVX_x16": 0.26218600000000003,
+                "GPU_CSR": 0.0071680000983178616,
+                "GPU_ELL": 0.0071680000983178616
+            }
+        }
+    },
+    {
+        "iris_dataset_30NN.mtx": {
+            "best_kernel": "CPU_CSR",
+            "runtime": 0.00125,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.00125,
+                "CPU_ELL": 0.001496,
+                "CPU_CSR_AVX": 0.0134425,
+                "CPU_ELL_AVX_x4": 0.050542500000000004,
+                "CPU_ELL_AVX_x16": 0.0537785,
+                "GPU_CSR": 0.008160000201314688,
+                "GPU_ELL": 0.009216000325977802
+            }
+        }
+    },
+    {
+        "k49_norm_10NN.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.06799999997019768,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.3563015,
+                "CPU_ELL": 2.6275155000000003,
+                "CPU_CSR_AVX": 0.8790625,
+                "CPU_ELL_AVX_x4": 5.0739125000000005,
+                "CPU_ELL_AVX_x16": 4.889215999999999,
+                "GPU_CSR": 0.06799999997019768,
+                "GPU_ELL": 0.3758080005645752
+            }
+        }
+    },
+    {
+        "uni_chimera_i4.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7717849999999999,
+                "CPU_ELL": 1.5692145000000002,
+                "CPU_CSR_AVX": 2.496073,
+                "CPU_ELL_AVX_x4": 3.2495165,
+                "CPU_ELL_AVX_x16": 1.103125,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.0854559987783432
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_01.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.775903,
+                "CPU_ELL": 1.5593265,
+                "CPU_CSR_AVX": 2.4849745,
+                "CPU_ELL_AVX_x4": 3.195355,
+                "CPU_ELL_AVX_x16": 1.0495005,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08585599809885025
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_02.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07891199737787247,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7921635,
+                "CPU_ELL": 1.5727085,
+                "CPU_CSR_AVX": 2.5048835,
+                "CPU_ELL_AVX_x4": 3.25542,
+                "CPU_ELL_AVX_x16": 1.060912,
+                "GPU_CSR": 0.07891199737787247,
+                "GPU_ELL": 0.0857119970023632
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_03.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07955200225114822,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.8016185,
+                "CPU_ELL": 1.583716,
+                "CPU_CSR_AVX": 3.0249125,
+                "CPU_ELL_AVX_x4": 3.277597,
+                "CPU_ELL_AVX_x16": 1.074399,
+                "GPU_CSR": 0.07955200225114822,
+                "GPU_ELL": 0.08587199822068214
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_04.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07887999713420868,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.8028775,
+                "CPU_ELL": 1.6050495,
+                "CPU_CSR_AVX": 2.584951,
+                "CPU_ELL_AVX_x4": 3.2348305,
+                "CPU_ELL_AVX_x16": 1.094447,
+                "GPU_CSR": 0.07887999713420868,
+                "GPU_ELL": 0.08579199761152267
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_05.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.780941,
+                "CPU_ELL": 1.537091,
+                "CPU_CSR_AVX": 2.5171330000000003,
+                "CPU_ELL_AVX_x4": 3.2186745,
+                "CPU_ELL_AVX_x16": 1.0956815,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.0854719989001751
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_11.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7812844999999999,
+                "CPU_ELL": 1.401729,
+                "CPU_CSR_AVX": 2.5183014999999997,
+                "CPU_ELL_AVX_x4": 3.2523725,
+                "CPU_ELL_AVX_x16": 1.095231,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08505599945783615
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_12.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7907949999999999,
+                "CPU_ELL": 1.5593105,
+                "CPU_CSR_AVX": 3.053349,
+                "CPU_ELL_AVX_x4": 3.18859,
+                "CPU_ELL_AVX_x16": 1.124102,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08590399846434593
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_13.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7989255,
+                "CPU_ELL": 1.5730405,
+                "CPU_CSR_AVX": 2.5556795,
+                "CPU_ELL_AVX_x4": 3.2364509999999997,
+                "CPU_ELL_AVX_x16": 1.090767,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08591999858617783
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_14.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.8172755,
+                "CPU_ELL": 1.5634575000000002,
+                "CPU_CSR_AVX": 2.4921759999999997,
+                "CPU_ELL_AVX_x4": 3.2511255,
+                "CPU_ELL_AVX_x16": 1.0917675,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08579199761152267
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_15.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7996405,
+                "CPU_ELL": 1.5629715,
+                "CPU_CSR_AVX": 2.4949635,
+                "CPU_ELL_AVX_x4": 3.1893835,
+                "CPU_ELL_AVX_x16": 1.0729069999999998,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08587199822068214
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_16.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07895999774336815,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.8397595,
+                "CPU_ELL": 1.5346994999999999,
+                "CPU_CSR_AVX": 2.9362085,
+                "CPU_ELL_AVX_x4": 3.243296,
+                "CPU_ELL_AVX_x16": 1.0895085,
+                "GPU_CSR": 0.07895999774336815,
+                "GPU_ELL": 0.08580799773335457
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_22.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.800738,
+                "CPU_ELL": 1.5430665,
+                "CPU_CSR_AVX": 2.542987,
+                "CPU_ELL_AVX_x4": 3.174767,
+                "CPU_ELL_AVX_x16": 1.0991279999999999,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08507199957966805
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_23.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7964424999999999,
+                "CPU_ELL": 1.562737,
+                "CPU_CSR_AVX": 2.783176,
+                "CPU_ELL_AVX_x4": 3.1135580000000003,
+                "CPU_ELL_AVX_x16": 1.0870980000000001,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08574399724602699
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_24.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7674285000000001,
+                "CPU_ELL": 1.5412249999999998,
+                "CPU_CSR_AVX": 2.6890585,
+                "CPU_ELL_AVX_x4": 3.1159575,
+                "CPU_ELL_AVX_x16": 1.0736075,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08588799834251404
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_25.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.832716,
+                "CPU_ELL": 1.5743525,
+                "CPU_CSR_AVX": 2.4821834999999997,
+                "CPU_ELL_AVX_x4": 3.233485,
+                "CPU_ELL_AVX_x16": 1.033547,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08566399663686752
+            }
+        }
+    },
+    {
+        "uni_chimera_i4_A_26.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.07884799689054489,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7619865,
+                "CPU_ELL": 1.5273105,
+                "CPU_CSR_AVX": 3.2082835000000003,
+                "CPU_ELL_AVX_x4": 3.205142,
+                "CPU_ELL_AVX_x16": 1.077261,
+                "GPU_CSR": 0.07884799689054489,
+                "GPU_ELL": 0.08583999797701836
+            }
+        }
+    },
+    {
+        "uni_chimera_i5.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.051023999229073524,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.6974400000000001,
+                "CPU_ELL": 1.8573605,
+                "CPU_CSR_AVX": 2.4386099999999997,
+                "CPU_ELL_AVX_x4": 3.289846,
+                "CPU_ELL_AVX_x16": 1.375461,
+                "GPU_CSR": 0.051023999229073524,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_01.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.050992000848054886,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.695195,
+                "CPU_ELL": 1.9711435000000002,
+                "CPU_CSR_AVX": 2.4444245000000002,
+                "CPU_ELL_AVX_x4": 3.3442165,
+                "CPU_ELL_AVX_x16": 1.3992725,
+                "GPU_CSR": 0.050992000848054886,
+                "GPU_ELL": 0.10831999778747559
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_02.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05115199834108353,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7186655,
+                "CPU_ELL": 2.036986,
+                "CPU_CSR_AVX": 2.4768049999999997,
+                "CPU_ELL_AVX_x4": 3.3688830000000003,
+                "CPU_ELL_AVX_x16": 1.3623020000000001,
+                "GPU_CSR": 0.05115199834108353,
+                "GPU_ELL": 0.1082719974219799
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_03.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.050303999334573746,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.703332,
+                "CPU_ELL": 2.007724,
+                "CPU_CSR_AVX": 2.4275320000000002,
+                "CPU_ELL_AVX_x4": 3.2694375,
+                "CPU_ELL_AVX_x16": 1.3508550000000001,
+                "GPU_CSR": 0.050303999334573746,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_04.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05302400141954422,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.740533,
+                "CPU_ELL": 2.0205675000000003,
+                "CPU_CSR_AVX": 2.8101135,
+                "CPU_ELL_AVX_x4": 3.1741165000000002,
+                "CPU_ELL_AVX_x16": 1.3605874999999998,
+                "GPU_CSR": 0.05302400141954422,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_05.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.050992000848054886,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.6849005,
+                "CPU_ELL": 1.9888884999999998,
+                "CPU_CSR_AVX": 2.5654325,
+                "CPU_ELL_AVX_x4": 3.2960665000000002,
+                "CPU_ELL_AVX_x16": 1.3695650000000001,
+                "GPU_CSR": 0.050992000848054886,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_06.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.051024001091718674,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.6970475,
+                "CPU_ELL": 2.0051705,
+                "CPU_CSR_AVX": 2.4699465,
+                "CPU_ELL_AVX_x4": 3.2954855,
+                "CPU_ELL_AVX_x16": 1.3569895,
+                "GPU_CSR": 0.051024001091718674,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_07.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05100800096988678,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.702311,
+                "CPU_ELL": 1.9687805,
+                "CPU_CSR_AVX": 3.0179289999999996,
+                "CPU_ELL_AVX_x4": 3.3403495000000003,
+                "CPU_ELL_AVX_x16": 1.376174,
+                "GPU_CSR": 0.05100800096988678,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_08.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.050383999943733215,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.6997875,
+                "CPU_ELL": 1.98665,
+                "CPU_CSR_AVX": 2.4371324999999997,
+                "CPU_ELL_AVX_x4": 3.2062475,
+                "CPU_ELL_AVX_x16": 1.3716335000000002,
+                "GPU_CSR": 0.050383999943733215,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_09.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.051024001091718674,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.696467,
+                "CPU_ELL": 2.015603,
+                "CPU_CSR_AVX": 2.437159,
+                "CPU_ELL_AVX_x4": 3.3280715,
+                "CPU_ELL_AVX_x16": 1.375108,
+                "GPU_CSR": 0.051024001091718674,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_10.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05115199834108353,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.703384,
+                "CPU_ELL": 1.9477195,
+                "CPU_CSR_AVX": 2.439165,
+                "CPU_ELL_AVX_x4": 3.3389745,
+                "CPU_ELL_AVX_x16": 1.380183,
+                "GPU_CSR": 0.05115199834108353,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_11.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.051103999838232994,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.696374,
+                "CPU_ELL": 2.010019,
+                "CPU_CSR_AVX": 2.5905305,
+                "CPU_ELL_AVX_x4": 3.37091,
+                "CPU_ELL_AVX_x16": 1.3839735000000002,
+                "GPU_CSR": 0.051103999838232994,
+                "GPU_ELL": 0.10839999839663506
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_12.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.050175998359918594,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.695851,
+                "CPU_ELL": 1.9919004999999999,
+                "CPU_CSR_AVX": 2.7992809999999997,
+                "CPU_ELL_AVX_x4": 3.3184445,
+                "CPU_ELL_AVX_x16": 1.381298,
+                "GPU_CSR": 0.050175998359918594,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_13.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05067200027406216,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7359195000000001,
+                "CPU_ELL": 1.979948,
+                "CPU_CSR_AVX": 2.869903,
+                "CPU_ELL_AVX_x4": 3.320778,
+                "CPU_ELL_AVX_x16": 1.365991,
+                "GPU_CSR": 0.05067200027406216,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_14.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05115199834108353,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7107645,
+                "CPU_ELL": 2.022938,
+                "CPU_CSR_AVX": 2.4185904999999996,
+                "CPU_ELL_AVX_x4": 3.2439125000000004,
+                "CPU_ELL_AVX_x16": 1.3826014999999998,
+                "GPU_CSR": 0.05115199834108353,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_15.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.051183998584747314,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7014425,
+                "CPU_ELL": 2.030558,
+                "CPU_CSR_AVX": 2.602888,
+                "CPU_ELL_AVX_x4": 3.2830225000000004,
+                "CPU_ELL_AVX_x16": 1.3674119999999998,
+                "GPU_CSR": 0.051183998584747314,
+                "GPU_ELL": 0.10851199924945831
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_16.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.051072001457214355,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.6869955000000001,
+                "CPU_ELL": 2.0225910000000002,
+                "CPU_CSR_AVX": 2.43656,
+                "CPU_ELL_AVX_x4": 3.319452,
+                "CPU_ELL_AVX_x16": 1.3837644999999998,
+                "GPU_CSR": 0.051072001457214355,
+                "GPU_ELL": 0.10851199924945831
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_17.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.051152000203728676,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.6878219999999999,
+                "CPU_ELL": 1.962236,
+                "CPU_CSR_AVX": 2.5714175,
+                "CPU_ELL_AVX_x4": 3.2301,
+                "CPU_ELL_AVX_x16": 1.363724,
+                "GPU_CSR": 0.051152000203728676,
+                "GPU_ELL": 0.10841599851846695
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_18.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.050175998359918594,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.696939,
+                "CPU_ELL": 2.0212295,
+                "CPU_CSR_AVX": 2.4323034999999997,
+                "CPU_ELL_AVX_x4": 3.320488,
+                "CPU_ELL_AVX_x16": 1.3842275,
+                "GPU_CSR": 0.050175998359918594,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_19.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05089600011706352,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.692752,
+                "CPU_ELL": 1.9838084999999999,
+                "CPU_CSR_AVX": 2.4374000000000002,
+                "CPU_ELL_AVX_x4": 3.3404915,
+                "CPU_ELL_AVX_x16": 1.3708084999999999,
+                "GPU_CSR": 0.05089600011706352,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_20.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05105600133538246,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.6960445,
+                "CPU_ELL": 1.9972945000000002,
+                "CPU_CSR_AVX": 2.4335075,
+                "CPU_ELL_AVX_x4": 3.3243105,
+                "CPU_ELL_AVX_x16": 1.352229,
+                "GPU_CSR": 0.05105600133538246,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_21.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05104000121355057,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.6898925,
+                "CPU_ELL": 1.979875,
+                "CPU_CSR_AVX": 2.4487620000000003,
+                "CPU_ELL_AVX_x4": 3.3160654999999997,
+                "CPU_ELL_AVX_x16": 1.3698975,
+                "GPU_CSR": 0.05104000121355057,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_22.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.05092800036072731,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.7079044999999999,
+                "CPU_ELL": 1.8275350000000001,
+                "CPU_CSR_AVX": 2.6809399999999997,
+                "CPU_ELL_AVX_x4": 3.3543000000000003,
+                "CPU_ELL_AVX_x16": 1.3818865,
+                "GPU_CSR": 0.05092800036072731,
+                "GPU_ELL": 0.10830399766564369
+            }
+        }
+    },
+    {
+        "uni_chimera_i5_A_23.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.050992000848054886,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.6875915,
+                "CPU_ELL": 1.965436,
+                "CPU_CSR_AVX": 2.4634675,
+                "CPU_ELL_AVX_x4": 3.342545,
+                "CPU_ELL_AVX_x16": 1.3898365,
+                "GPU_CSR": 0.050992000848054886,
+                "GPU_ELL": 0.1085439994931221
+            }
+        }
+    },
+    {
+        "usps_norm_5NN.mtx": {
+            "best_kernel": "GPU_CSR",
+            "runtime": 0.009151999838650227,
+            "all_kernel_profiles": {
+                "CPU_CSR": 0.0696155,
+                "CPU_ELL": 0.1128175,
+                "CPU_CSR_AVX": 0.3274275,
+                "CPU_ELL_AVX_x4": 0.32392299999999996,
+                "CPU_ELL_AVX_x16": 0.2127035,
+                "GPU_CSR": 0.009151999838650227,
+                "GPU_ELL": 0.015359999611973763
+            }
         }
     }
 ]
