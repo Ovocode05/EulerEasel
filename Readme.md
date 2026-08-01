@@ -55,6 +55,7 @@ This is one example of matrix used for training with 100000 rows and columns wit
 - Use better Algorithms like Neural LinearTS, LinearUCB, or Deep RL etc.
 - Using autotuner for optimizing the parameters of each kernels. eg. Threads, blocks or number of CPU cores (based on the availability). Methods include GridSearch, Bayesian Optimization, etc.
 - Adding more backends like Triton, or making it adaptable to distributed GPUs, and hardware independent code using Kokkos. ( I mean there are thousands of other advance possibilities)
+- Making use of hardware information like l1 cache misses, GFLOPS, or E-cores, P-cores. 
 
 ## Current repository scope
 
@@ -101,3 +102,6 @@ cmake --build build -j4
 - `Testing/` — test and validation scripts
 - `build/` — generated build directory
 
+<br>
+[!Note]
+I tried to make it like a python libraries using a pybind11 wrap over from-scratch written kernels in CUDA c++ ,using library openMP and AVX intrinsics for CPU based hardware. Imitating a small part of already existing techniques in large sparse algebra like Morpheus and Oracle.
