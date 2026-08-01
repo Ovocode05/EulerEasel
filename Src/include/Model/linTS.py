@@ -105,7 +105,6 @@ class LinTS:
         self.models = {}
         with np.load(filepath) as data:
             for keys in data.files:
-                print(f"NPZ File Key found: '{keys}'") 
                 if keys.startswith("model_"):
                     parts = keys.split("__")
                     kernel = parts[1]
