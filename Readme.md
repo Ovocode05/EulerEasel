@@ -103,5 +103,7 @@ cmake --build build -j4
 - `build/` — generated build directory
 
 <br>
-[!Note]
-I tried to make it like a python libraries using a pybind11 wrap over from-scratch written kernels in CUDA c++ ,using library openMP and AVX intrinsics for CPU based hardware. Imitating a small part of already existing techniques in large sparse algebra like Morpheus and Oracle.
+
+> [!NOTE]
+> I designed the project to resemble a Python library, using **pybind11** to wrap from-scratch **CUDA C++ kernels**, with **OpenMP** and **AVX intrinsics** for CPU-based execution. The implementation draws inspiration from techniques used in large-scale sparse algebra systems such as **Morpheus** and **Oracle**.
+
