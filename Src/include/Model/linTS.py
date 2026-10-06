@@ -6,7 +6,13 @@ from typing import Dict, Iterable, List, Sequence, Tuple, Union
 
 import numpy as np
 
-sys.path.insert(0, "/home/fakeheadset/Projects/EulerEasel/Src/include")
+INCLUDE_DIR = Path(__file__).resolve().parents[1]
+if str(INCLUDE_DIR) not in sys.path:
+    sys.path.insert(0, str(INCLUDE_DIR))
+
+from native_module_path import ensure_native_module_path
+
+ensure_native_module_path()
 
 
 class FeatureNormalizer:
@@ -253,7 +259,7 @@ class HierarchicalKernelSelector:
 
 
 def _load_runtime_modules():
-    sys.path.insert(0, "/home/fakeheadset/Projects/EulerEasel/Src/include")
+    ensure_native_module_path()
     try:
         import CUDAruntime as crn  # noqa: F401
         import runtime as rn  # noqa: F401

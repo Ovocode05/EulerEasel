@@ -4,7 +4,14 @@ import os
 import sys
 from pathlib import Path
 import json
-sys.path.insert(0, "/home/fakeheadset/Projects/EulerEasel/Src/include")
+
+INCLUDE_DIR = Path(__file__).resolve().parents[1]
+if str(INCLUDE_DIR) not in sys.path:
+    sys.path.insert(0, str(INCLUDE_DIR))
+
+from native_module_path import ensure_native_module_path
+
+ensure_native_module_path()
 
 import matrix_extractor as me
 import CUDAruntime as crn

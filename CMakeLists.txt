@@ -72,6 +72,8 @@ set(PYBIND11_FINDPYTHON ON)
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 find_package(pybind11 CONFIG REQUIRED)
 
+set(EULER_PYTHON_MODULE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/Src/include/native")
+
 add_library(euler_common INTERFACE)
 
 target_include_directories(euler_common INTERFACE
@@ -110,7 +112,7 @@ target_include_directories(matrix_extractor PRIVATE
 )
 
 set_target_properties(matrix_extractor PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Src/include
+    LIBRARY_OUTPUT_DIRECTORY "${EULER_PYTHON_MODULE_OUTPUT_DIR}"
 )
 
 pybind11_add_module(runtime
@@ -126,7 +128,7 @@ target_include_directories(runtime PRIVATE
 )
 
 set_target_properties(runtime PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Src/include
+    LIBRARY_OUTPUT_DIRECTORY "${EULER_PYTHON_MODULE_OUTPUT_DIR}"
 )
 
 if(EULER_BUILD_CUDA)
@@ -175,44 +177,28 @@ if(EULER_BUILD_CUDA)
         CUDA_ARCHITECTURES native
 
         LIBRARY_OUTPUT_DIRECTORY
-        ${CMAKE_SOURCE_DIR}/Src/include
+        ${EULER_PYTHON_MODULE_OUTPUT_DIR}
     )
 
     add_custom_command(TARGET CUDAruntime POST_BUILD
+        # Remove outputs left by the previous flat-output and Python-copy layout.
         COMMAND ${CMAKE_COMMAND} -E
-            make_directory "${CMAKE_SOURCE_DIR}/Python"
-
+            rm -f "${CMAKE_SOURCE_DIR}/Src/include/$<TARGET_FILE_NAME:CUDAruntime>"
         COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different
-            "$<TARGET_FILE:CUDAruntime>"
-            "${CMAKE_SOURCE_DIR}/Python/$<TARGET_FILE_NAME:CUDAruntime>"
+            rm -f "${CMAKE_SOURCE_DIR}/Python/$<TARGET_FILE_NAME:CUDAruntime>"
     )
 
 endif()
 
 foreach(module matrix_extractor runtime)
     add_custom_command(TARGET ${module} POST_BUILD
+        # Remove outputs left by the previous flat-output and Python-copy layout.
         COMMAND ${CMAKE_COMMAND} -E
-            make_directory "${CMAKE_SOURCE_DIR}/Python"
-
+            rm -f "${CMAKE_SOURCE_DIR}/Src/include/$<TARGET_FILE_NAME:${module}>"
         COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different
-            "$<TARGET_FILE:${module}>"
-            "${CMAKE_SOURCE_DIR}/Python/$<TARGET_FILE_NAME:${module}>"
+            rm -f "${CMAKE_SOURCE_DIR}/Python/$<TARGET_FILE_NAME:${module}>"
     )
 endforeach()
-
-if(EULER_BUILD_CUDA)
-    add_custom_command(TARGET CUDAruntime POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E
-            make_directory "${CMAKE_SOURCE_DIR}/Python"
-
-        COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different
-            "$<TARGET_FILE:CUDAruntime>"
-            "${CMAKE_SOURCE_DIR}/Python/$<TARGET_FILE_NAME:CUDAruntime>"
-    )
-endif()
 
 
 message(STATUS "")

@@ -97,9 +97,10 @@ cmake --build build -j4
 
 ## Repository layout
 
-- `Src/` — core implementation, kernels, runtime utilities, and strategy code and include pybind of cpp code
+- `Src/` — core implementation, kernels, runtime utilities, strategy code, and pybind11 bindings
+- `Src/include/native/` — compiled Python extension modules produced by CMake
 - `Data/` — sample matrices and synthetic inputs
-- `Testing/` — test and validation scripts
+- `Testing/` — test and validation scripts; reusable policy-replay and tuning modules live in `Testing/algorithm_tuning/`
 - `build/` — generated build directory
 
 <br>
@@ -107,3 +108,16 @@ cmake --build build -j4
 > [!NOTE]
 > I designed the project to resemble a Python library, using **pybind11** to wrap from-scratch **CUDA C++ kernels**, with **OpenMP** and **AVX intrinsics** for CPU-based execution. The implementation draws inspiration from techniques used in large-scale sparse algebra systems such as **Morpheus** and **Oracle**.
 
+### Algorithm tuning experiment
+
+The experiment is kept as a small CLI entry point with reusable modules for
+benchmark data, policy replay, and parameter sweeps:
+
+```bash
+python Testing/algorithm_tuning_experiment.py
+python Testing/algorithm_tuning_experiment.py --tune-matrix dataset/bcsstk18.mtx
+pytest Testing/test_algorithm_tuning_data.py Testing/test_algorithm_tuning_cli.py
+```
+
+The CMake build places Python extension binaries in `Src/include/native/`.
+Python entry points add that directory to their import path automatically.

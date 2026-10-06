@@ -15,6 +15,20 @@ DATASET_ROOT = ROOT / "dataset"
 LOG_DIR = ROOT / "logs"
 
 
+def _runtime_pythonpath() -> str:
+    """Build PYTHONPATH entries for source modules and compiled extensions.
+
+    Usage: pass the returned path to subprocesses that import runtime modules.
+    Existing PYTHONPATH entries are retained after the repository paths.
+    """
+    runtime_paths = (SRC_INCLUDE, SRC_INCLUDE / "native")
+    existing_paths = os.environ.get("PYTHONPATH")
+    paths = [str(path) for path in runtime_paths]
+    if existing_paths:
+        paths.append(existing_paths)
+    return os.pathsep.join(paths)
+
+
 def ensure_logging(log_path: Path):
     log_path.parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
@@ -80,10 +94,9 @@ def _extract_first_json(payload: str):
 
 def discover_available_kernels() -> list[str]:
     env = dict(os.environ)
-    env["PYTHONPATH"] = str(SRC_INCLUDE)
+    env["PYTHONPATH"] = _runtime_pythonpath()
     code = """
-import json, os, sys
-sys.path.insert(0, os.environ['PYTHONPATH'])
+import json
 import matrix_extractor as me
 hrd = me.HardwareContext()
 str_reg = me.StrategyRegister()
@@ -103,10 +116,9 @@ def run_single_matrix_kernel(
     timeout_seconds: float,
 ) -> dict:
     env = dict(os.environ)
-    env["PYTHONPATH"] = str(SRC_INCLUDE)
+    env["PYTHONPATH"] = _runtime_pythonpath()
     code = f"""
-import json, os, sys, time, traceback
-sys.path.insert(0, os.environ['PYTHONPATH'])
+import json, time, traceback
 import matrix_extractor as me
 import runtime as cpu_runtime
 from Model.context import LazyFrozenContext

@@ -6,8 +6,9 @@ from typing import Iterable, List
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC_INCLUDE = ROOT / "Src" / "include"
-if str(SRC_INCLUDE) not in sys.path:
-    sys.path.insert(0, str(SRC_INCLUDE))
+for import_path in (SRC_INCLUDE, SRC_INCLUDE / "native"):
+    if str(import_path) not in sys.path:
+        sys.path.insert(0, str(import_path))
 
 from Model.context import LazyFrozenContext
 from Model.registry import launch_spmv
