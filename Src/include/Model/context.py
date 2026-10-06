@@ -1,6 +1,40 @@
 import numpy as np
 import sys
+
 sys.path.insert(0, "/home/fakeheadset/Projects/EulerEasel/Src/include")
+
+
+def _as_float_array(values):
+    if isinstance(values, np.ndarray):
+        return np.asarray(values, dtype=np.float64).reshape(-1)
+    return np.asarray(list(values), dtype=np.float64).reshape(-1)
+
+
+def build_hardware_context_vector(hardware):
+    """Convert the runtime hardware summary into a numeric vector.
+
+    The values are intentionally ordered deterministically so the policy can be
+    trained consistently across machines and matrix families.
+    """
+    if hardware is None:
+        hardware = {}
+
+    hardware_vector = [
+        float(hardware.get("has_gpu", 0.0)),
+        float(hardware.get("has_avx", 0.0)),
+        float(hardware.get("logical_threads", 0.0)),
+        float(hardware.get("gpu_memory_gb", 0.0)),
+        float(hardware.get("cpu_memory_gb", 0.0)),
+    ]
+    return np.asarray(hardware_vector, dtype=np.float64)
+
+
+def build_runtime_context_vector(matrix_features, hardware):
+    """Combine matrix structure features and hardware features into one vector."""
+    matrix_vector = _as_float_array(matrix_features)
+    hardware_vector = build_hardware_context_vector(hardware)
+    return np.concatenate([matrix_vector, hardware_vector]).astype(np.float64)
+
 
 class LazyFrozenContext:
     def __init__(self, filename, r, c, nnz):

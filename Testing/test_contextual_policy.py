@@ -8,7 +8,8 @@ SRC = ROOT / "Src" / "include"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from Model.linTS import FeatureNormalizer, LinearUCB
+from Model.context import build_runtime_context_vector
+from Model.linTS import FeatureNormalizer, HierarchicalKernelSelector, LinearUCB
 
 
 def test_feature_normalizer_stabilizes_inputs():
@@ -33,3 +34,43 @@ def test_linear_ucb_prefers_high_reward_arm():
 
     chosen, _ = bandit.choose_kernel(kernels, x)
     assert chosen == "cpu_csr"
+
+
+def test_runtime_context_vector_includes_hardware_state():
+    matrix_features = np.array([1000.0, 500.0, 9000.0, 8.0, 10.0], dtype=np.float64)
+    hardware = {
+        "has_gpu": 1.0,
+        "has_avx": 1.0,
+        "logical_threads": 16.0,
+        "gpu_memory_gb": 8.0,
+        "cpu_memory_gb": 32.0,
+    }
+
+    context = build_runtime_context_vector(matrix_features, hardware)
+
+    assert context.shape[0] == matrix_features.shape[0] + 5
+    assert np.all(np.isfinite(context))
+    assert context[-1] == 32.0
+    assert context[-2] == 8.0
+
+
+def test_hierarchical_selector_prefers_backend_then_kernel():
+    selector = HierarchicalKernelSelector(
+        backend_names=["cpu", "gpu"],
+        layout_kernels_by_backend={
+            "cpu": ["cpu_csr", "cpu_ell"],
+            "gpu": ["gpu_csr", "gpu_ell"],
+        },
+        num_features=2,
+        alpha=1.0,
+    )
+
+    x = np.array([1.0, 0.0], dtype=np.float64)
+    selector.update(x, "cpu", "cpu_csr", reward=2.0)
+    selector.update(x, "cpu", "cpu_csr", reward=1.5)
+    selector.update(x, "gpu", "gpu_csr", reward=0.3)
+    selector.update(x, "gpu", "gpu_ell", reward=0.1)
+
+    backend, kernel, _ = selector.select(x)
+    assert backend == "cpu"
+    assert kernel == "cpu_csr"

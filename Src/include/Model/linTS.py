@@ -193,6 +193,60 @@ class LinTS(LinearUCB):
         return best_kernel, float(sampled_scores[best_kernel])
 
 
+class HierarchicalKernelSelector:
+    """Select backend and format in two stages.
+
+    This mirrors the runtime architecture: first decide the hardware family and then
+    choose the most suitable kernel inside that family. It keeps the policy simple,
+    explainable, and easy to validate before we move to a heavier model.
+    """
+
+    def __init__(
+        self,
+        backend_names: Sequence[str],
+        layout_kernels_by_backend: Dict[str, Sequence[str]],
+        num_features: int,
+        alpha: float = 1.0,
+        ridge: float = 1e-3,
+        fallback_backend: str | None = None,
+    ):
+        self.backend_names = list(backend_names)
+        self.fallback_backend = fallback_backend or self.backend_names[0]
+        self.num_features = int(num_features)
+        self.backend_model = LinearUCB(self.backend_names, self.num_features, alpha=alpha, ridge=ridge)
+        self.layout_models: Dict[str, LinearUCB] = {}
+
+        for backend, kernels in layout_kernels_by_backend.items():
+            self.layout_models[backend] = LinearUCB(list(kernels), self.num_features, alpha=alpha, ridge=ridge)
+
+    def select_backend(self, context: Union[np.ndarray, Sequence[float]]) -> Tuple[str, float]:
+        return self.backend_model.choose_kernel(self.backend_names, context)
+
+    def select_kernel(self, context: Union[np.ndarray, Sequence[float]], backend: str | None = None):
+        if backend is None:
+            backend, _ = self.select_backend(context)
+
+        if backend not in self.layout_models:
+            return backend, None, 0.0
+
+        kernels = list(self.layout_models[backend].models.keys())
+        if not kernels:
+            return backend, None, 0.0
+
+        best_kernel, score = self.layout_models[backend].choose_kernel(kernels, context)
+        return backend, best_kernel, float(score)
+
+    def update(self, context, backend: str, kernel: str, reward: float) -> None:
+        self.backend_model.update(backend, context, float(reward))
+        if backend in self.layout_models:
+            self.layout_models[backend].update(kernel, context, float(reward))
+
+    def select(self, context):
+        backend, _ = self.select_backend(context)
+        backend_name, kernel_name, score = self.select_kernel(context, backend=backend)
+        return backend_name, kernel_name, float(score)
+
+
 # ------------------------------------------------------------
 # compatibility helpers for the legacy profiling scripts
 # ------------------------------------------------------------
