@@ -1,11 +1,20 @@
 import numpy 
 import sys
+
 sys.path.insert(0, "/home/fakeheadset/Projects/EulerEasel/Src/include")
-# Assuming 'run' and 'cudarn' are exposed from your pybind11 module 'me'
-# e.g., runner = me.SpMvCPURunner() and gpu_runner = me.SpMvGPURunner()
-from context import LazyFrozenContext
+
+try:
+    from Model.context import LazyFrozenContext
+except ModuleNotFoundError:  # pragma: no cover - compatibility for direct include-root execution
+    from context import LazyFrozenContext
+
 import matrix_extractor as me
-import CUDAruntime as cudarn
+
+try:
+    import CUDAruntime as cudarn
+except ModuleNotFoundError:  # pragma: no cover - CUDA backend is optional
+    cudarn = None
+
 import runtime as run
 
 
@@ -17,6 +26,36 @@ import runtime as run
 #     if avx:
 #         return run.proc_hyb_avx4(ctx.hyb, ctx.x.tolist(), ctx.A_np.tolist(), ctx.J_np.tolist(), ctx.r)
 #     return run.proc_hyb(ctx.hyb, ctx.x.tolist(), ctx.A_np.tolist(), ctx.J_np.tolist(), ctx.r)
+
+
+def _run_gpu_csr(ctx):
+    ctx.ensure_gpu_csr()
+    ctx.d_y.zero()
+    return cudarn.cuda_csr(
+        threads=ctx.threads,
+        blocks=ctx.blocks,
+        d_rptr=ctx.d_rptr,
+        d_ind=ctx.d_ind,
+        d_vals=ctx.d_vals,
+        numrows=ctx.r,
+        d_x=ctx.d_x,
+        d_y=ctx.d_y,
+    )
+
+
+def _run_gpu_ell(ctx):
+    ctx.ensure_gpu_ell()
+    ctx.d_y.zero()
+    return cudarn.cuda_ell(
+        threads=ctx.threads,
+        blocks=ctx.blocks,
+        A=ctx.d_a,
+        J=ctx.d_j,
+        rows=ctx.ell_rows,
+        cols=ctx.ell_cols,
+        d_x=ctx.d_x,
+        d_y=ctx.d_y,
+    )
 
 
 # Unified mapping targeting your exact C++ tuple outputs [y, runtime]
@@ -53,26 +92,9 @@ SPMV_REGISTRY = {
     # me.Kernel.CPU_HYB_AVX: lambda ctx: _run_cpu_hyb(ctx, avx=True),
 
     # --- GPU Kernels (Dispatched to 'cudarn' module) ---
-    me.Kernel.GPU_CSR: lambda ctx: (
-        ctx.ensure_gpu_csr(),
-        cudarn.cuda_csr(
-            threads=ctx.threads, blocks=ctx.blocks, 
-            d_rptr=ctx.d_rptr, d_ind=ctx.d_ind, d_vals=ctx.d_vals, 
-            numrows=ctx.r, d_x=ctx.d_x, d_y=ctx.d_y
-        ),
-        # ctx.d_y.d2h()
-    )[1],
+    me.Kernel.GPU_CSR: _run_gpu_csr,
     
-    me.Kernel.GPU_ELL: lambda ctx: ( 
-        ctx.ensure_gpu_ell(),
-        cudarn.cuda_ell(
-            threads=ctx.threads, blocks=ctx.blocks, 
-            A=ctx.d_a, J=ctx.d_j, rows=ctx.ell_rows, cols=ctx.ell_cols, 
-            d_x=ctx.d_x, d_y=ctx.d_y
-        ),
-        # ctx.d_y.d2h()
-
-    )[1],
+    me.Kernel.GPU_ELL: _run_gpu_ell,
     
     # me.Kernel.GPU_HYB: lambda ctx: (
     #     ctx.ensure_gpu_hyb(),

@@ -30,6 +30,13 @@ void bind_device_buffer_type(
         .def("getsize",
              &deviceBuffer<T>::size)
 
+           .def("zero",
+               [](deviceBuffer<T> &self)
+               {
+                  cudaMemset(self.data(), 0, self.size() * sizeof(T));
+                  CUDA_CHECK();
+               })
+
         .def_property_readonly(
             "ptr",
             [](deviceBuffer<T> &self)

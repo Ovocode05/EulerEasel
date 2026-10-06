@@ -1,4 +1,4 @@
-Data
+dataset
 *.exe
 *.bin
 __pycache__
