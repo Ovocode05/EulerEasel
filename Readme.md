@@ -1,7 +1,7 @@
 # EulerEasel
 
 It is a modular runtime for sparse matrix vector multiplication that adapts execution strategy based on hardware, uses matrix features as matrix context vector to predict the most suitable kernel for that matrix.
-Rather than forcing the user to choose between formats and backends, the runtime automatically chooses the best memory layout, and hardware to perform spMV. spMV is a backbone of all the iterative algorithms like GRES, Conjugate Gradient etc. and it is repeated multiple times per iteration. Hence taking care of memory allocation and attaining the optimal performance and utilizing hardware has become the prime focus of many sparse-algebra libraries like Morpheus, Oracle, Ginkgo, etc.
+Rather than forcing the user to choose between formats and backends, the runtime automatically chooses the best memory layout, and hardware to perform spMV. spMV is a backbone of all the iterative algorithms like GMRES, Conjugate Gradient etc. and it is repeated multiple times per iteration. Hence taking care of memory allocation and attaining the optimal performance and utilizing hardware has become the prime focus of many sparse-algebra libraries like Morpheus, Oracle, Ginkgo, etc.
 ## The problem
 
 Sparse kernels are not one-size-fits-all.

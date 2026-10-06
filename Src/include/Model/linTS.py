@@ -1,240 +1,275 @@
-import numpy as np
-import sys
+import json
 import os
 import sys
 from pathlib import Path
-import json
-sys.path.insert(0, "/home/fakeheadset/Projects/EulerEasel/Src/include")
-
-import matrix_extractor as me
-import CUDAruntime as crn
-import runtime as rn
-from context import LazyFrozenContext
-from registry import launch_spmv
-
-'''
-#343fff
-this is the implementation of the linear Thompson sampling algorithm for contextual bandits
-weights of the important features. linTS process the options sequentially and updates the model 
-after each option is processed.
-'''
+from typing import Dict, Iterable, List, Sequence, Tuple, Union
 
 import numpy as np
 
-class LinTS:
-    def __init__(self, kernels, num_features):
-        """
-        kernels: List of me.Kernel enum objects
-        num_features: Length of your matrix feature vector (new_data)
-        """
-        self.models = {}
-        if kernels is not None and num_features is not None:
-        # Pre-initialize matrices for every unique C++ Enum kernel
-            for k in kernels:
-                self.models[k] = {
-                    'A': np.identity(num_features, dtype=np.float64), 
-                    'b': np.zeros((num_features, 1), dtype=np.float64)
-                }
+sys.path.insert(0, "/home/fakeheadset/Projects/EulerEasel/Src/include")
 
-    def choose_kernel(self, active_kernels, x):
-        """
-        active_kernels: The subset of kernels available on this hardware
-        x: Flattened numpy feature vector
-        """
-        scores = {}
-        x = x.flatten()
-        
-        for k in active_kernels:
-            model = self.models[k]
-            # Fast, numerically stable way to compute theta
-            theta = np.linalg.solve(model['A'], model['b']).flatten()
 
-            # Cholesky factor of A (A = L L^T)
-            L = np.linalg.cholesky(model['A'])
+class FeatureNormalizer:
+    """Standardize a feature matrix while keeping the implementation simple and stable."""
 
-            # Sample z ~ N(0, I)
-            z = np.random.standard_normal(len(theta))
+    def __init__(self, eps: float = 1e-8):
+        self.eps = float(eps)
+        self.mean_: np.ndarray | None = None
+        self.scale_: np.ndarray | None = None
 
-            # noise ~ N(0, A^{-1})
-            noise = np.linalg.solve(L.T, z)
+    def fit(self, matrix: np.ndarray) -> "FeatureNormalizer":
+        matrix = np.asarray(matrix, dtype=np.float64)
+        if matrix.ndim == 1:
+            matrix = matrix.reshape(1, -1)
 
-            # Thompson sample
-            theta_sample = theta + noise
+        self.mean_ = matrix.mean(axis=0)
+        std = matrix.std(axis=0)
+        std = np.where(std < self.eps, 1.0, std)
+        self.scale_ = std
+        return self
 
-            scores[k] = np.dot(x, theta_sample)
-            
-        # Return the actual C++ Enum object of the winner
-        best_kernel = max(scores, key=scores.get)
-        return best_kernel, scores[best_kernel]
+    def transform(self, matrix: np.ndarray) -> np.ndarray:
+        if self.mean_ is None or self.scale_ is None:
+            raise ValueError("Normalizer has not been fitted yet.")
 
-    def update(self, kernel, x, reward):
-        """Updates the linear model for the executed kernel."""
+        matrix = np.asarray(matrix, dtype=np.float64)
+        if matrix.ndim == 1:
+            matrix = matrix.reshape(1, -1)
+        return (matrix - self.mean_) / self.scale_
+
+    def fit_transform(self, matrix: np.ndarray) -> np.ndarray:
+        return self.fit(matrix).transform(matrix)
+
+
+class LinearUCB:
+    """Linear UCB contextual bandit for kernel selection.
+
+    This is a cleaner replacement for the earlier single flat LinTS baseline.
+    It keeps the model per arm, regularizes the covariance matrix, and scores each
+    kernel using the optimistic upper confidence bound.
+    """
+
+    def __init__(self, kernels: Sequence[object], num_features: int, alpha: float = 1.0, ridge: float = 1e-3):
+        self.kernels = list(kernels)
+        self.num_features = int(num_features)
+        self.alpha = float(alpha)
+        self.ridge = float(ridge)
+        self.models: Dict[object, Dict[str, np.ndarray]] = {}
+
+        identity = np.eye(self.num_features, dtype=np.float64)
+        for kernel in self.kernels:
+            self.models[kernel] = {
+                "A": identity.copy() * (1.0 + self.ridge),
+                "b": np.zeros((self.num_features, 1), dtype=np.float64),
+            }
+
+    @staticmethod
+    def _prepare_feature_vector(x: Union[np.ndarray, Sequence[float]]) -> np.ndarray:
+        vector = np.asarray(x, dtype=np.float64).reshape(-1)
+        if vector.size == 0:
+            raise ValueError("Feature vector cannot be empty.")
+        return vector
+
+    def _validate_kernel(self, kernel: object) -> None:
+        if kernel not in self.models:
+            raise KeyError(f"Kernel {kernel!r} is not registered in this bandit.")
+
+    def _theta(self, kernel: object) -> np.ndarray:
+        self._validate_kernel(kernel)
         model = self.models[kernel]
-        x = x.reshape(-1, 1)
-        model['A'] += x @ x.T
-        model['b'] += x * reward
-        
-    def get_best_kernel(self, kernels, x):
-        """
-        Performs pure exploitation (no random sampling) to find the 
-        best kernel based on learned historical rewards.
-        """
-        expected_rewards = {}
-        x = x.flatten()
-        
-        for k in kernels:
-            model = self.models[k]
-            # Solve for theta directly: A * theta = b -> theta = inv(A) * b
-            theta = np.linalg.solve(model['A'], model['b']).flatten()
-            
-            # Pure deterministic dot product (no random multivariate normal)
-            expected_rewards[k] = np.dot(x, theta)
-            
-        # Sort kernels from highest reward (fastest) to lowest reward (slowest)
-        ranked_kernels = sorted(expected_rewards.items(), key=lambda item: item[1], reverse=True)
-        return ranked_kernels
-    
-    def save(self, filepath:str):
-        save_dict= {}
-        for kernel_enum, matrices in self.models.items():
-            kernel_name = kernel_enum.name
-            save_dict[f'model__{kernel_name}__A'] = matrices['A']
-            save_dict[f'model__{kernel_name}__b'] = matrices['b']
-            
+        A = model["A"]
+        b = model["b"]
+        return np.linalg.solve(A, b).reshape(-1)
+
+    def choose_kernel(self, active_kernels: Sequence[object], x: Union[np.ndarray, Sequence[float]]) -> Tuple[object, float]:
+        feature_vector = self._prepare_feature_vector(x)
+        if feature_vector.size != self.num_features:
+            raise ValueError(
+                f"Expected feature length {self.num_features}, got {feature_vector.size}."
+            )
+
+        score_map: Dict[object, float] = {}
+        for kernel in active_kernels:
+            self._validate_kernel(kernel)
+            model = self.models[kernel]
+            A = model["A"]
+            b = model["b"]
+            theta = np.linalg.solve(A, b).reshape(-1)
+            inv_term = np.linalg.inv(A)
+            mean = float(feature_vector @ theta)
+            uncertainty = float(np.sqrt(max(feature_vector @ inv_term @ feature_vector, 0.0)))
+            score_map[kernel] = mean + self.alpha * uncertainty
+
+        best_kernel = max(score_map, key=score_map.get)
+        return best_kernel, float(score_map[best_kernel])
+
+    def update(self, kernel: object, x: Union[np.ndarray, Sequence[float]], reward: float) -> None:
+        self._validate_kernel(kernel)
+        feature_vector = self._prepare_feature_vector(x)
+        if feature_vector.size != self.num_features:
+            raise ValueError(
+                f"Expected feature length {self.num_features}, got {feature_vector.size}."
+            )
+
+        model = self.models[kernel]
+        column = feature_vector.reshape(-1, 1)
+        model["A"] += column @ column.T + self.ridge * np.eye(self.num_features, dtype=np.float64)
+        model["b"] += column * float(reward)
+
+    def get_best_kernel(self, kernels: Sequence[object], x: Union[np.ndarray, Sequence[float]]) -> List[Tuple[object, float]]:
+        feature_vector = self._prepare_feature_vector(x)
+        expected_rewards: Dict[object, float] = {}
+
+        for kernel in kernels:
+            self._validate_kernel(kernel)
+            theta = self._theta(kernel)
+            expected_rewards[kernel] = float(feature_vector @ theta)
+
+        return sorted(expected_rewards.items(), key=lambda item: item[1], reverse=True)
+
+    def save(self, filepath: str) -> None:
+        save_dict = {}
+        for kernel, matrices in self.models.items():
+            kernel_name = getattr(kernel, "name", str(kernel))
+            save_dict[f"model__{kernel_name}__A"] = matrices["A"]
+            save_dict[f"model__{kernel_name}__b"] = matrices["b"]
+
         np.savez_compressed(filepath, **save_dict)
-        print(f" Successfully saved models to {filepath}")
-        
-    def load(self, filepath: str, enum_class):
+
+    def load(self, filepath: str, enum_class) -> None:
         self.models = {}
         with np.load(filepath) as data:
-            for keys in data.files:
-                if keys.startswith("model_"):
-                    parts = keys.split("__")
-                    kernel = parts[1]
-                    matrix = parts[2]
+            for key in data.files:
+                if not key.startswith("model__"):
+                    continue
 
-                    # FIX: Use getattr() instead of square brackets for C++ Pybind11 Enums
-                    kernel_enum = getattr(enum_class, kernel)
-                    if kernel_enum not in self.models:
-                        self.models[kernel_enum] = {}
-                    
-                    self.models[kernel_enum][matrix] = data[keys]
-                    
-        print(f" Successfully loaded models from {filepath}")
-        
-    
-def generate_ground_truth_oracle():
-        folder_path = Path("/home/fakeheadset/Projects/EulerEasel/Data/datasetnaked/")
-        items = sorted([str(item) for item in folder_path.iterdir() if item.suffix == '.mtx']) 
-        
-        # 1. Discover all available C++ kernels from your strategy register
-        str_reg = me.StrategyRegister()
-        hrd = me.HardwareContext()
-        strategies = str_reg.get_strategies(hrd)
-        kernels = [s.kernel for s in strategies]
-        
-        oracle_records = []
-        NUM_RUNS = 30
-        
-        print(f"Starting brute-force profiling across {len(items)} matrices and {len(kernels)} kernels...")
-        
-        # 2. Iterate through each sparse matrix
-        for idx, filename in enumerate(items):
-            matrix_name = os.path.basename(filename)
-            print(f"\n[{idx + 1}/{len(items)}] Profiling matrix: {matrix_name}")
-            
-            # Build matrix context
-            [r, c, nnz] = me.mat_dim(filename)
-            frozen_context = LazyFrozenContext(filename, r, c, nnz)
-            
-            kernel_perf = {}
-            
-            # 3. Benchmark every single kernel on this specific matrix
-            for k in kernels:
-                runtimes = []
-                
-                # Warm-up run to eliminate GPU kernel compilation/allocation latency
-                try:
-                    launch_spmv(k, frozen_context)
-                except Exception:
-                    continue # Skip kernel if it fails or is incompatible with this matrix shape
-                    
-                # Run 30 timed iterations
-                for _ in range(NUM_RUNS):
-                    res = launch_spmv(k, frozen_context)
-                    runtime = res[1] if isinstance(res, (tuple, list)) else res
-                    runtimes.append(float(runtime))
-                    
-                if runtimes:
-                    # Use median to strip out operating system background jitter noise
-                    kernel_perf[k.name] = np.median(runtimes)
-            
-            if not kernel_perf:
-                print(f"  Warning: No kernels successfully executed for {matrix_name}")
-                continue
-                
-            # 4. Find the global best performing (fastest / minimum runtime) variant
-            best_kernel_name = min(kernel_perf, key=kernel_perf.get)
-            best_runtime = kernel_perf[best_kernel_name]
-            
-            print(f"  -> Winner: {best_kernel_name} | Median Runtime: {best_runtime:.4f} ms")
-            
-            # 5. Format structure to match the layout your main script expects
-            matrix_entry = {
-                matrix_name: {
-                    "best_kernel": best_kernel_name,
-                    "runtime": best_runtime,
-                    "all_kernel_profiles": kernel_perf
-                }
-            }
-            oracle_records.append(matrix_entry)
-            
-        # 6. Save records directly to JSON output
-        output_path = 'ground_truth.json'
-        with open(output_path, 'w') as f:
-            json.dump(oracle_records, f, indent=4)
-            
-        print(f"\n Successfully generated and saved oracle file to: {os.path.abspath(output_path)}")
+                parts = key.split("__")
+                if len(parts) != 3:
+                    continue
+
+                kernel_name = parts[1]
+                matrix_name = parts[2]
+                kernel_enum = getattr(enum_class, kernel_name, None)
+                if kernel_enum is None:
+                    continue
+
+                if kernel_enum not in self.models:
+                    self.models[kernel_enum] = {}
+                self.models[kernel_enum][matrix_name] = data[key]
 
 
+class LinTS(LinearUCB):
+    """Backward-compatible Thompson-sampling implementation.
+
+    Phase 1 keeps the older API, but the actual policy is now implemented in a cleaner,
+    reusable base class. This avoids duplicate logic between UCB and TS variants.
+    """
+
+    def __init__(self, kernels: Sequence[object], num_features: int, alpha: float = 1.0, ridge: float = 1e-3):
+        super().__init__(kernels=kernels, num_features=num_features, alpha=alpha, ridge=ridge)
+
+    def choose_kernel(self, active_kernels: Sequence[object], x: Union[np.ndarray, Sequence[float]]) -> Tuple[object, float]:
+        feature_vector = self._prepare_feature_vector(x)
+        if feature_vector.size != self.num_features:
+            raise ValueError(
+                f"Expected feature length {self.num_features}, got {feature_vector.size}."
+            )
+
+        sampled_scores: Dict[object, float] = {}
+        for kernel in active_kernels:
+            self._validate_kernel(kernel)
+            model = self.models[kernel]
+            A = model["A"]
+            b = model["b"]
+
+            theta = np.linalg.solve(A, b).reshape(-1)
+            L = np.linalg.cholesky(A)
+            z = np.random.standard_normal(len(theta))
+            noise = np.linalg.solve(L.T, z)
+            sampled_theta = theta + noise
+            sampled_scores[kernel] = float(feature_vector @ sampled_theta)
+
+        best_kernel = max(sampled_scores, key=sampled_scores.get)
+        return best_kernel, float(sampled_scores[best_kernel])
 
 
-if __name__ == "__main__":
-    # generate_ground_truth_oracle()
+# ------------------------------------------------------------
+# compatibility helpers for the legacy profiling scripts
+# ------------------------------------------------------------
+
+
+def _load_runtime_modules():
+    sys.path.insert(0, "/home/fakeheadset/Projects/EulerEasel/Src/include")
+    try:
+        import CUDAruntime as crn  # noqa: F401
+        import runtime as rn  # noqa: F401
+        import matrix_extractor as me  # noqa: F401
+        from context import LazyFrozenContext
+        from registry import launch_spmv
+        return me, crn, rn, LazyFrozenContext, launch_spmv
+    except Exception as exc:  # pragma: no cover - keep script compatibility
+        raise RuntimeError("Runtime modules are required for profiling workflows.") from exc
+
+
+def generate_ground_truth_oracle() -> None:
+    me, _, _, LazyFrozenContext, launch_spmv = _load_runtime_modules()
+
     folder_path = Path("/home/fakeheadset/Projects/EulerEasel/Data/datasetnaked/")
-    items = [str(item) for item in folder_path.iterdir()] 
+    items = sorted([str(item) for item in folder_path.iterdir() if item.suffix == ".mtx"])
+
     str_reg = me.StrategyRegister()
     hrd = me.HardwareContext()
     strategies = str_reg.get_strategies(hrd)
-    kernels = [s.kernel for s in strategies]
-    lnts = LinTS(kernels=kernels, num_features=14)
-    oracle = {f'oracle_{idx}' : {} for idx in range(len(items))}
-    with open('ground_truth.json', 'r') as f:
-        data = json.load(f)
-    runtime_oracle = data        
+    kernels = [strategy.kernel for strategy in strategies]
 
-    for idx, filename in enumerate(items):
-        [r, c, nnz] = me.mat_dim(filename)
-        frozen_context = LazyFrozenContext(filename, r, c, nnz)
-        temp_csr = frozen_context.ensure_cpu_csr_matrix()
-        extractor = me.MatrixExtractor(temp_csr)
-        new_data = np.array(extractor.to_flat_vector(extractor.extract_all()), dtype=np.float64)
-        best_kernel_enum, score= lnts.choose_kernel(kernels, new_data)
-        res = launch_spmv(best_kernel_enum, frozen_context)
-        reward = 0
-        if isinstance(res,(tuple, list)):
-            y, runtime = res
-        else:
-            runtime = res 
-        for i, item in enumerate(runtime_oracle):
-            inner_dict = next(iter(item.values()))
-            ground_truth_runtime = inner_dict['runtime']
-            reward = ground_truth_runtime/runtime
-        lnts.update(best_kernel_enum, new_data, reward)
-        
+    oracle_records: List[dict] = []
+    num_runs = 30
 
-    
-    lnts.save('/home/fakeheadset/Projects/EulerEasel/Src/include/Model/context.npz')
+    for index, filename in enumerate(items, start=1):
+        matrix_name = os.path.basename(filename)
+        [rows, cols, nnz] = me.mat_dim(filename)
+        frozen_context = LazyFrozenContext(filename, rows, cols, nnz)
+
+        kernel_perf: Dict[str, float] = {}
+        for kernel in kernels:
+            runtimes: List[float] = []
+            try:
+                launch_spmv(kernel, frozen_context)
+            except Exception:
+                continue
+
+            for _ in range(num_runs):
+                result = launch_spmv(kernel, frozen_context)
+                runtime = result[1] if isinstance(result, (tuple, list)) else result
+                runtimes.append(float(runtime))
+
+            if runtimes:
+                kernel_perf[kernel.name] = float(np.median(runtimes))
+
+        if not kernel_perf:
+            continue
+
+        best_kernel_name = min(kernel_perf, key=kernel_perf.get)
+        best_runtime = kernel_perf[best_kernel_name]
+        oracle_records.append(
+            {
+                matrix_name: {
+                    "best_kernel": best_kernel_name,
+                    "runtime": best_runtime,
+                    "all_kernel_profiles": kernel_perf,
+                }
+            }
+        )
+
+    output_path = Path("ground_truth.json")
+    with output_path.open("w", encoding="utf-8") as handle:
+        json.dump(oracle_records, handle, indent=4)
+
+    print(f"Successfully generated oracle in: {output_path.resolve()}")
+
+
+if __name__ == "__main__":
+    generate_ground_truth_oracle()
         
         
             
